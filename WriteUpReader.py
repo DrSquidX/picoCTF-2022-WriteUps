@@ -62,5 +62,5 @@ class Reader:
                 break
             except:
                 print(self.help_msg)
-reader = Reader("picoCTF-2022-Write-Ups.txt")
+reader = Reader("picoCTF-2022-Write-Ups.txt") # Make sure this is in the same directory!
 reader.get_items()
